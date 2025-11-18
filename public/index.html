@@ -8,13 +8,23 @@
 </head>
 <body>
   <header class="site-header">
-    <h1>SnipSparkx</h1>
-    <p class="lead">Add, preview and copy CSS snippets — live preview powered by iframes.</p>
+    <div class="header-inner">
+      <div class="brand">
+        <h1>SnipSparkx</h1>
+        <p class="lead">Add, preview and copy CSS snippets — live preview powered by iframes.</p>
+      </div>
+      <div class="header-controls">
+        <input id="search" class="search" type="search" placeholder="Search snippets..." aria-label="Search snippets">
+      </div>
+    </div>
   </header>
 
   <main class="container">
     <section class="left">
-      <h2>Snippets</h2>
+      <div class="section-header">
+        <h2>Snippets</h2>
+        <p class="muted">Browse community snippets or add your own.</p>
+      </div>
       <div id="snippets" class="snippets-list">
         <!-- snippets will be rendered here -->
       </div>
@@ -122,8 +132,22 @@
   }
 
   // Form handling
-  document.addEventListener('DOMContentLoaded', ()=>{
+    document.addEventListener('DOMContentLoaded', ()=>{
     renderSnippets();
+
+    // Search filter
+    const search = document.getElementById('search');
+    if (search) {
+      search.addEventListener('input', (e) => {
+        const q = (e.target.value || '').toLowerCase().trim();
+        const cards = document.querySelectorAll('.snippet-card');
+        cards.forEach(c => {
+          const t = (c.querySelector('h3')?.textContent || '').toLowerCase();
+          const d = (c.querySelector('.desc')?.textContent || '').toLowerCase();
+          c.style.display = (t.includes(q) || d.includes(q)) ? '' : 'none';
+        });
+      });
+    }
 
     const form = document.getElementById('addForm');
     const msg = document.getElementById('formMsg');
