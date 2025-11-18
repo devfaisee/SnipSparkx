@@ -5,13 +5,16 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SnipSparkx — CSS Snippets</title>
   <link rel="stylesheet" href="/style.css" />
+  <!-- Highlight.js for code styling -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 </head>
 <body>
   <header class="site-header">
     <div class="header-inner">
       <div class="brand">
         <h1>SnipSparkx</h1>
-        <p class="lead">Add, preview and copy CSS snippets — live preview powered by iframes.</p>
+        <p class="lead">Add, preview and copy CSS snippets — live preview powered by isolated iframes.</p>
       </div>
       <div class="header-controls">
         <input id="search" class="search" type="search" placeholder="Search snippets..." aria-label="Search snippets">
@@ -23,7 +26,7 @@
     <section class="left">
       <div class="section-header">
         <h2>Snippets</h2>
-        <p class="muted">Browse community snippets or add your own.</p>
+        <p class="muted">Browse snippets or add your own. Tap a card to interact.</p>
       </div>
       <div id="snippets" class="snippets-list">
         <!-- snippets will be rendered here -->
@@ -54,6 +57,18 @@
     <small>Built for quick CSS experimentation. Deploy to Vercel for serverless persistence.</small>
   </footer>
 
+  <!-- Fullscreen modal preview -->
+  <div id="modal" class="modal" aria-hidden="true">
+    <div class="modal-backdrop" id="modalBackdrop"></div>
+    <div class="modal-panel" role="dialog" aria-modal="true">
+      <div class="modal-header">
+        <div id="modalTitle">Preview</div>
+        <button id="modalClose" class="btn small">Close</button>
+      </div>
+      <iframe id="modalIframe" class="modal-iframe" sandbox="allow-same-origin"></iframe>
+    </div>
+  </div>
+
   <script>
   // Utility to escape HTML
   function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -62,6 +77,26 @@
     const res = await fetch('/snippets.json');
     if(!res.ok) return [];
     return await res.json();
+  }
+
+  function openModal(srcdoc, title){
+    const modal = document.getElementById('modal');
+    const iframe = document.getElementById('modalIframe');
+    const modalTitle = document.getElementById('modalTitle');
+    iframe.srcdoc = srcdoc;
+    modalTitle.textContent = title || 'Preview';
+    modal.setAttribute('aria-hidden', 'false');
+    modal.classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeModal(){
+    const modal = document.getElementById('modal');
+    const iframe = document.getElementById('modalIframe');
+    iframe.srcdoc = '';
+    modal.setAttribute('aria-hidden', 'true');
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
   }
 
   function createSnippetCard(snippet){
@@ -84,18 +119,21 @@
     pre.className = 'code';
     const codeEl = document.createElement('code');
     codeEl.textContent = snippet.code;
+    codeEl.className = 'language-css';
     pre.appendChild(codeEl);
     codeWrap.appendChild(pre);
 
     const copyBtn = document.createElement('button');
     copyBtn.className = 'btn small';
-    copyBtn.textContent = 'Copy CSS';
+    copyBtn.title = 'Copy CSS to clipboard';
+    copyBtn.innerHTML = 'Copy';
     copyBtn.addEventListener('click', async ()=>{
       try{
         await navigator.clipboard.writeText(snippet.code);
-        copyBtn.textContent = 'Copied!';
-        setTimeout(()=> copyBtn.textContent = 'Copy CSS',1500);
+        copyBtn.textContent = 'Copied';
+        setTimeout(()=> copyBtn.innerHTML = 'Copy',1500);
       }catch(e){
+        copyBtn.textContent = 'Copy';
         alert('Copy failed');
       }
     });
@@ -113,9 +151,32 @@
     iframe.setAttribute('sandbox','allow-same-origin');
     const titleEsc = esc(snippet.title || 'Preview');
     const descEsc = esc(snippet.description || '');
-    const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>${snippet.code}</style></head><body><div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p></div></body></html>`;
+    const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Inter,system-ui,Arial;margin:12px;color:#111} .demo h1{margin:0 0 8px 0}${snippet.code}</style></head><body><div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p></div></body></html>`;
     iframe.srcdoc = srcdoc;
     card.appendChild(iframe);
+
+    // Controls row: preview fullscreen and copy
+    const actions = document.createElement('div');
+    actions.className = 'card-actions';
+    const previewBtn = document.createElement('button');
+    previewBtn.className = 'btn small';
+    previewBtn.textContent = 'Preview';
+    previewBtn.addEventListener('click', ()=> openModal(srcdoc, snippet.title));
+    actions.appendChild(previewBtn);
+    // clone copy button for the actions area
+    const copyAction = copyBtn.cloneNode(true);
+    copyAction.addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(snippet.code); copyAction.textContent = 'Copied'; setTimeout(()=> copyAction.innerHTML = 'Copy',1500);}catch(e){alert('Copy failed');}
+    });
+    actions.appendChild(copyAction);
+    card.appendChild(actions);
+
+    // syntax highlight the code block (if hljs loaded)
+    if (window.hljs && hljs.highlightElement) {
+      setTimeout(()=>{
+        try{ hljs.highlightElement(codeEl); }catch(e){}
+      },10);
+    }
 
     return card;
   }
@@ -124,6 +185,10 @@
     const list = document.getElementById('snippets');
     list.innerHTML = '';
     const data = await fetchSnippets();
+    if(!data || data.length === 0){
+      list.innerHTML = '<div class="empty">No snippets yet — add one on the right.</div>';
+      return;
+    }
     // show newest first
     (data||[]).slice().reverse().forEach(s=>{
       const card = createSnippetCard(s);
@@ -131,9 +196,12 @@
     });
   }
 
-  // Form handling
-    document.addEventListener('DOMContentLoaded', ()=>{
+  // Form handling, search and modal wiring
+  document.addEventListener('DOMContentLoaded', ()=>{
     renderSnippets();
+
+    // initialize highlight.js globally
+    if(window.hljs && hljs.highlightAll){ try{ hljs.highlightAll(); }catch(e){} }
 
     // Search filter
     const search = document.getElementById('search');
@@ -148,6 +216,13 @@
         });
       });
     }
+
+    // modal controls
+    const modal = document.getElementById('modal');
+    const modalClose = document.getElementById('modalClose');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    modalClose.addEventListener('click', closeModal);
+    modalBackdrop.addEventListener('click', closeModal);
 
     const form = document.getElementById('addForm');
     const msg = document.getElementById('formMsg');
