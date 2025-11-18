@@ -16,7 +16,7 @@ class SnippetStore {
     this.branch = process.env.GITHUB_BRANCH || 'main';
   }
 
-  read(){
+  async read(){
     // Try local file first
     try{
       if(fs.existsSync(this.filePath)){
@@ -71,10 +71,10 @@ class SnippetStore {
     }
   }
 
-  async add({title, description = '', code}){
-    const data = this.read();
+  async add({title, description = '', code, html = ''}){
+    const data = await this.read();
     const id = Date.now().toString();
-    const snippet = { id, title, description, code };
+    const snippet = { id, title, description, code, html };
     data.push(snippet);
 
     // Attempt GitHub-backed commit if configured
