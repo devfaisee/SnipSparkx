@@ -45,6 +45,9 @@
         <label>CSS Code
           <textarea id="code" rows="9" placeholder="e.g. h1{ color: red; }" required></textarea>
         </label>
+        <label>HTML Markup (optional)
+          <textarea id="html" rows="6" placeholder="Optional HTML to preview, e.g. &lt;h1&gt;Demo&lt;/h1&gt;"> </textarea>
+        </label>
         <div class="form-actions">
           <button type="submit" class="btn primary">Add Snippet</button>
         </div>
@@ -72,17 +75,24 @@
   <script>
   // Small OOP refactor: Snippet and SnippetManager classes
   class Snippet {
-    constructor({id, title, description, code}){
+    constructor({id, title, description, code, html}){
       this.id = id;
       this.title = title || 'Untitled';
       this.description = description || '';
       this.code = code || '';
+      this.html = html || '';
     }
 
+    // Build the iframe srcdoc. If the snippet includes `html`, use it.
+    // Otherwise use a small default demo markup so CSS-only snippets still render.
     getSrcDoc(){
       const titleEsc = this._esc(this.title);
       const descEsc = this._esc(this.description);
-      return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Inter,system-ui,Arial;margin:12px;color:#111} .demo h1{margin:0 0 8px 0}${this.code}</style></head><body><div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p></div></body></html>`;
+      const demoHtml = this.html && this.html.trim()
+        ? this.html
+        : `<div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p><button class="btn primary">Example</button></div>`;
+
+      return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Inter,system-ui,Arial;margin:12px;color:#111} .demo h1{margin:0 0 8px 0}${this.code}</style></head><body>${demoHtml}</body></html>`;
     }
 
     _esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -197,8 +207,17 @@
       });
 
       if(this.form) this.form.addEventListener('submit', async (ev)=>{
-        ev.preventDefault(); this.msg.textContent=''; const title = document.getElementById('title').value.trim(); const description = document.getElementById('description').value.trim(); const code = document.getElementById('code').value; if(!title || !code){ this.msg.textContent = 'Please provide Title and CSS code.'; return; }
-        try{ const res = await fetch('/api/addSnippet',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title,description,code}) }); if(!res.ok){ const err = await res.json().catch(()=>({error:'Unknown error'})); this.msg.textContent = 'Error: ' + (err.error || res.statusText); return; } const newSnippet = await res.json(); const sn = new Snippet(newSnippet); this.container.insertBefore(sn.renderCard(this.openModal.bind(this)), this.container.firstChild); this.form.reset(); this.msg.textContent = 'Snippet added.'; setTimeout(()=> this.msg.textContent = '',2500); }catch(e){ this.msg.textContent = 'Request failed.'; }
+        ev.preventDefault(); this.msg.textContent='';
+        const title = document.getElementById('title').value.trim();
+        const description = document.getElementById('description').value.trim();
+        const code = document.getElementById('code').value;
+        const html = document.getElementById('html') ? document.getElementById('html').value : '';
+        if(!title || !code){ this.msg.textContent = 'Please provide Title and CSS code.'; return; }
+        try{
+          const res = await fetch('/api/addSnippet',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title,description,code,html}) });
+          if(!res.ok){ const err = await res.json().catch(()=>({error:'Unknown error'})); this.msg.textContent = 'Error: ' + (err.error || res.statusText); return; }
+          const newSnippet = await res.json(); const sn = new Snippet(newSnippet); this.container.insertBefore(sn.renderCard(this.openModal.bind(this)), this.container.firstChild); this.form.reset(); this.msg.textContent = 'Snippet added.'; setTimeout(()=> this.msg.textContent = '',2500);
+        }catch(e){ this.msg.textContent = 'Request failed.'; }
       });
     }
   }

@@ -106,14 +106,14 @@ module.exports = async (req, res) => {
 
   try {
     const payload = req.body || {};
-    const { title, description = '', code } = payload;
+    const { title, description = '', code, html = '' } = payload;
     if (!title || !code) {
       res.statusCode = 400;
       return res.json({ error: 'Missing required fields: title and code' });
     }
 
     const store = new SnippetStore(process.cwd());
-    const snippet = await store.add({ title, description, code });
+    const snippet = await store.add({ title, description, code, html });
 
     res.statusCode = 201;
     res.setHeader('Content-Type', 'application/json');
