@@ -157,8 +157,13 @@ module.exports = async (req, res) => {
       return res.json({ error: 'Missing required fields: title and code' });
     }
 
+    // Basic server-side sanitization: strip <script> and on* attributes to avoid saving executable script
+    let cleanHtml = (html || '').toString();
+    cleanHtml = cleanHtml.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+    cleanHtml = cleanHtml.replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+
     const store = new SnippetStore(process.cwd());
-    const snippet = await store.add({ title, description, code, html });
+    const snippet = await store.add({ title, description, code, html: cleanHtml });
 
     res.statusCode = 201;
     res.setHeader('Content-Type', 'application/json');

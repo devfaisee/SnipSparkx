@@ -83,15 +83,34 @@
       this.html = html || '';
     }
 
-    // Build the iframe srcdoc. If the snippet includes `html`, use it.
-    // Otherwise use a small default demo markup so CSS-only snippets still render.
+    // Build the iframe srcdoc. If the snippet includes a full HTML document (doctype/html),
+    // we insert the CSS into its head. Otherwise we wrap a small demo template.
     getSrcDoc(){
       const titleEsc = this._esc(this.title);
       const descEsc = this._esc(this.description);
-      const demoHtml = this.html && this.html.trim()
-        ? this.html
-        : `<div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p><button class="btn primary">Example</button></div>`;
+      const hasFullHtml = /<!doctype\s+html>|<html[\s>]/i.test(this.html || '');
 
+      // Basic client-side sanitization: remove script tags and "on..." attributes
+      let userHtml = (this.html || '').toString();
+      userHtml = userHtml.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
+      userHtml = userHtml.replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
+      // common typo/path fixes: styles.css -> style.css
+      userHtml = userHtml.replace(/href=["']?\/styles\.css["']?/gi, 'href="/style.css"');
+      userHtml = userHtml.replace(/href=["']?styles\.css["']?/gi, 'href="/style.css"');
+
+      if(hasFullHtml){
+        // Try to inject CSS into existing <head>
+        const cssTag = `<style>body{font-family:Inter,system-ui,Arial;margin:12px;color:#111} .demo h1{margin:0 0 8px 0}${this.code}</style>`;
+        if(/<head[\s\S]*?>/i.test(userHtml)){
+          userHtml = userHtml.replace(/<\/head>/i, cssTag + '</head>');
+        } else {
+          // insert head after doctype
+          userHtml = userHtml.replace(/<!doctype[^>]*>/i, match => match + `<head>${cssTag}</head>`);
+        }
+        return userHtml;
+      }
+
+      const demoHtml = userHtml.trim() ? userHtml : `<div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p><button class="btn primary">Example</button></div>`;
       return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Inter,system-ui,Arial;margin:12px;color:#111} .demo h1{margin:0 0 8px 0}${this.code}</style></head><body>${demoHtml}</body></html>`;
     }
 
@@ -193,8 +212,29 @@
       (data||[]).slice().reverse().forEach(s=>{ const snippet = new Snippet(s); this.container.appendChild(snippet.renderCard(this.openModal.bind(this))); });
     }
 
-    openModal(srcdoc, title){ this.modalIframe.srcdoc = srcdoc; this.modalTitle.textContent = title || 'Preview'; this.modal.setAttribute('aria-hidden','false'); this.modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
-    closeModal(){ this.modalIframe.srcdoc = ''; this.modal.setAttribute('aria-hidden','true'); this.modal.classList.remove('open'); document.body.style.overflow = ''; }
+    openModal(srcdoc, title){
+      // set aria-hidden on main content to remove it from assistive tree
+      const main = document.querySelector('main.container');
+      if(main) main.setAttribute('aria-hidden','true');
+      this.prevFocus = document.activeElement;
+      this.modalIframe.srcdoc = srcdoc;
+      this.modalTitle.textContent = title || 'Preview';
+      this.modal.setAttribute('aria-hidden','false');
+      this.modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+      // focus close button for keyboard users
+      setTimeout(()=>{ try{ this.modalClose.focus(); }catch(e){} },50);
+    }
+
+    closeModal(){
+      this.modalIframe.srcdoc = '';
+      this.modal.setAttribute('aria-hidden','true');
+      this.modal.classList.remove('open');
+      document.body.style.overflow = '';
+      const main = document.querySelector('main.container');
+      if(main) main.removeAttribute('aria-hidden');
+      try{ if(this.prevFocus && this.prevFocus.focus) this.prevFocus.focus(); }catch(e){}
+    }
 
     _wireEvents(){
       if(this.modalClose) this.modalClose.addEventListener('click', ()=> this.closeModal());
