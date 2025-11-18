@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SnipSparkx — CSS Snippets</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <h1>SnipSparkx</h1>
+    <p class="lead">Add, preview and copy CSS snippets — live preview powered by iframes.</p>
+  </header>
+
+  <main class="container">
+    <section class="left">
+      <h2>Snippets</h2>
+      <div id="snippets" class="snippets-list">
+        <!-- snippets will be rendered here -->
+      </div>
+    </section>
+
+    <aside class="right">
+      <h2>Add Snippet</h2>
+      <form id="addForm" class="snippet-form">
+        <label>Title
+          <input type="text" id="title" required />
+        </label>
+        <label>Description
+          <input type="text" id="description" />
+        </label>
+        <label>CSS Code
+          <textarea id="code" rows="9" placeholder="e.g. h1{ color: red; }" required></textarea>
+        </label>
+        <div class="form-actions">
+          <button type="submit" class="btn primary">Add Snippet</button>
+        </div>
+        <div id="formMsg" class="form-msg" aria-live="polite"></div>
+      </form>
+    </aside>
+  </main>
+
+  <footer class="site-footer">
+    <small>Built for quick CSS experimentation. Deploy to Vercel for serverless persistence.</small>
+  </footer>
+
+  <script>
+  // Utility to escape HTML
+  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  async function fetchSnippets(){
+    const res = await fetch('/snippets.json');
+    if(!res.ok) return [];
+    return await res.json();
+  }
+
+  function createSnippetCard(snippet){
+    const card = document.createElement('article');
+    card.className = 'card snippet-card';
+
+    const title = document.createElement('h3');
+    title.textContent = snippet.title || 'Untitled';
+    card.appendChild(title);
+
+    const desc = document.createElement('p');
+    desc.className = 'desc';
+    desc.textContent = snippet.description || '';
+    card.appendChild(desc);
+
+    // Code area with copy button
+    const codeWrap = document.createElement('div');
+    codeWrap.className = 'code-wrap';
+    const pre = document.createElement('pre');
+    pre.className = 'code';
+    const codeEl = document.createElement('code');
+    codeEl.textContent = snippet.code;
+    pre.appendChild(codeEl);
+    codeWrap.appendChild(pre);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.className = 'btn small';
+    copyBtn.textContent = 'Copy CSS';
+    copyBtn.addEventListener('click', async ()=>{
+      try{
+        await navigator.clipboard.writeText(snippet.code);
+        copyBtn.textContent = 'Copied!';
+        setTimeout(()=> copyBtn.textContent = 'Copy CSS',1500);
+      }catch(e){
+        alert('Copy failed');
+      }
+    });
+    codeWrap.appendChild(copyBtn);
+    card.appendChild(codeWrap);
+
+    // Live preview using iframe to scope CSS
+    const previewLabel = document.createElement('div');
+    previewLabel.className = 'preview-label';
+    previewLabel.textContent = 'Live Preview';
+    card.appendChild(previewLabel);
+
+    const iframe = document.createElement('iframe');
+    iframe.className = 'preview-iframe';
+    iframe.setAttribute('sandbox','allow-same-origin');
+    const titleEsc = esc(snippet.title || 'Preview');
+    const descEsc = esc(snippet.description || '');
+    const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><style>${snippet.code}</style></head><body><div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p></div></body></html>`;
+    iframe.srcdoc = srcdoc;
+    card.appendChild(iframe);
+
+    return card;
+  }
+
+  async function renderSnippets(){
+    const list = document.getElementById('snippets');
+    list.innerHTML = '';
+    const data = await fetchSnippets();
+    // show newest first
+    (data||[]).slice().reverse().forEach(s=>{
+      const card = createSnippetCard(s);
+      list.appendChild(card);
+    });
+  }
+
+  // Form handling
+  document.addEventListener('DOMContentLoaded', ()=>{
+    renderSnippets();
+
+    const form = document.getElementById('addForm');
+    const msg = document.getElementById('formMsg');
+    form.addEventListener('submit', async (ev)=>{
+      ev.preventDefault();
+      msg.textContent = '';
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const code = document.getElementById('code').value;
+      if(!title || !code){ msg.textContent = 'Please provide Title and CSS code.'; return; }
+
+      try{
+        const res = await fetch('/api/addSnippet', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({title, description, code})
+        });
+        if(!res.ok){
+          const err = await res.json().catch(()=>({error:'Unknown error'}));
+          msg.textContent = 'Error: ' + (err.error || res.statusText);
+          return;
+        }
+        const newSnippet = await res.json();
+        // Prepend new snippet locally and re-render
+        const list = document.getElementById('snippets');
+        const card = createSnippetCard(newSnippet);
+        list.insertBefore(card, list.firstChild);
+        form.reset();
+        msg.textContent = 'Snippet added.';
+        setTimeout(()=> msg.textContent = '', 2500);
+      }catch(e){
+        msg.textContent = 'Request failed.';
+      }
+    });
+  });
+  </script>
+</body>
+</html>
