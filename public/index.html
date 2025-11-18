@@ -70,194 +70,141 @@
   </div>
 
   <script>
-  // Utility to escape HTML
-  function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+  // Small OOP refactor: Snippet and SnippetManager classes
+  class Snippet {
+    constructor({id, title, description, code}){
+      this.id = id;
+      this.title = title || 'Untitled';
+      this.description = description || '';
+      this.code = code || '';
+    }
 
-  async function fetchSnippets(){
-    const res = await fetch('/snippets.json');
-    if(!res.ok) return [];
-    return await res.json();
-  }
+    getSrcDoc(){
+      const titleEsc = this._esc(this.title);
+      const descEsc = this._esc(this.description);
+      return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Inter,system-ui,Arial;margin:12px;color:#111} .demo h1{margin:0 0 8px 0}${this.code}</style></head><body><div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p></div></body></html>`;
+    }
 
-  function openModal(srcdoc, title){
-    const modal = document.getElementById('modal');
-    const iframe = document.getElementById('modalIframe');
-    const modalTitle = document.getElementById('modalTitle');
-    iframe.srcdoc = srcdoc;
-    modalTitle.textContent = title || 'Preview';
-    modal.setAttribute('aria-hidden', 'false');
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  }
+    _esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-  function closeModal(){
-    const modal = document.getElementById('modal');
-    const iframe = document.getElementById('modalIframe');
-    iframe.srcdoc = '';
-    modal.setAttribute('aria-hidden', 'true');
-    modal.classList.remove('open');
-    document.body.style.overflow = '';
-  }
+    renderCard(onPreview){
+      const card = document.createElement('article');
+      card.className = 'card snippet-card';
 
-  function createSnippetCard(snippet){
-    const card = document.createElement('article');
-    card.className = 'card snippet-card';
+      const titleEl = document.createElement('h3');
+      titleEl.textContent = this.title;
+      card.appendChild(titleEl);
 
-    const title = document.createElement('h3');
-    title.textContent = snippet.title || 'Untitled';
-    card.appendChild(title);
+      const desc = document.createElement('p');
+      desc.className = 'desc';
+      desc.textContent = this.description;
+      card.appendChild(desc);
 
-    const desc = document.createElement('p');
-    desc.className = 'desc';
-    desc.textContent = snippet.description || '';
-    card.appendChild(desc);
+      const codeWrap = document.createElement('div');
+      codeWrap.className = 'code-wrap';
+      const pre = document.createElement('pre');
+      pre.className = 'code';
+      const codeEl = document.createElement('code');
+      codeEl.textContent = this.code;
+      codeEl.className = 'language-css';
+      pre.appendChild(codeEl);
+      codeWrap.appendChild(pre);
 
-    // Code area with copy button
-    const codeWrap = document.createElement('div');
-    codeWrap.className = 'code-wrap';
-    const pre = document.createElement('pre');
-    pre.className = 'code';
-    const codeEl = document.createElement('code');
-    codeEl.textContent = snippet.code;
-    codeEl.className = 'language-css';
-    pre.appendChild(codeEl);
-    codeWrap.appendChild(pre);
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'btn small';
+      copyBtn.title = 'Copy CSS to clipboard';
+      copyBtn.innerHTML = 'Copy';
+      copyBtn.addEventListener('click', async ()=>{
+        try{ await navigator.clipboard.writeText(this.code); copyBtn.textContent = 'Copied'; setTimeout(()=> copyBtn.innerHTML = 'Copy',1500);}catch(e){alert('Copy failed');}
+      });
+      codeWrap.appendChild(copyBtn);
+      card.appendChild(codeWrap);
 
-    const copyBtn = document.createElement('button');
-    copyBtn.className = 'btn small';
-    copyBtn.title = 'Copy CSS to clipboard';
-    copyBtn.innerHTML = 'Copy';
-    copyBtn.addEventListener('click', async ()=>{
-      try{
-        await navigator.clipboard.writeText(snippet.code);
-        copyBtn.textContent = 'Copied';
-        setTimeout(()=> copyBtn.innerHTML = 'Copy',1500);
-      }catch(e){
-        copyBtn.textContent = 'Copy';
-        alert('Copy failed');
+      const previewLabel = document.createElement('div');
+      previewLabel.className = 'preview-label';
+      previewLabel.textContent = 'Live Preview';
+      card.appendChild(previewLabel);
+
+      const iframe = document.createElement('iframe');
+      iframe.className = 'preview-iframe';
+      iframe.setAttribute('sandbox','allow-same-origin');
+      iframe.srcdoc = this.getSrcDoc();
+      card.appendChild(iframe);
+
+      const actions = document.createElement('div');
+      actions.className = 'card-actions';
+      const previewBtn = document.createElement('button');
+      previewBtn.className = 'btn small';
+      previewBtn.textContent = 'Preview';
+      previewBtn.addEventListener('click', ()=> onPreview(this.getSrcDoc(), this.title));
+      actions.appendChild(previewBtn);
+
+      const copyAction = copyBtn.cloneNode(true);
+      copyAction.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(this.code); copyAction.textContent = 'Copied'; setTimeout(()=> copyAction.innerHTML = 'Copy',1500);}catch(e){alert('Copy failed');}});
+      actions.appendChild(copyAction);
+      card.appendChild(actions);
+
+      if (window.hljs && hljs.highlightElement) {
+        setTimeout(()=>{ try{ hljs.highlightElement(codeEl); }catch(e){} },10);
       }
-    });
-    codeWrap.appendChild(copyBtn);
-    card.appendChild(codeWrap);
 
-    // Live preview using iframe to scope CSS
-    const previewLabel = document.createElement('div');
-    previewLabel.className = 'preview-label';
-    previewLabel.textContent = 'Live Preview';
-    card.appendChild(previewLabel);
-
-    const iframe = document.createElement('iframe');
-    iframe.className = 'preview-iframe';
-    iframe.setAttribute('sandbox','allow-same-origin');
-    const titleEsc = esc(snippet.title || 'Preview');
-    const descEsc = esc(snippet.description || '');
-    const srcdoc = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{font-family:Inter,system-ui,Arial;margin:12px;color:#111} .demo h1{margin:0 0 8px 0}${snippet.code}</style></head><body><div class="demo"><h1>${titleEsc}</h1><p>${descEsc}</p></div></body></html>`;
-    iframe.srcdoc = srcdoc;
-    card.appendChild(iframe);
-
-    // Controls row: preview fullscreen and copy
-    const actions = document.createElement('div');
-    actions.className = 'card-actions';
-    const previewBtn = document.createElement('button');
-    previewBtn.className = 'btn small';
-    previewBtn.textContent = 'Preview';
-    previewBtn.addEventListener('click', ()=> openModal(srcdoc, snippet.title));
-    actions.appendChild(previewBtn);
-    // clone copy button for the actions area
-    const copyAction = copyBtn.cloneNode(true);
-    copyAction.addEventListener('click', async ()=>{
-      try{ await navigator.clipboard.writeText(snippet.code); copyAction.textContent = 'Copied'; setTimeout(()=> copyAction.innerHTML = 'Copy',1500);}catch(e){alert('Copy failed');}
-    });
-    actions.appendChild(copyAction);
-    card.appendChild(actions);
-
-    // syntax highlight the code block (if hljs loaded)
-    if (window.hljs && hljs.highlightElement) {
-      setTimeout(()=>{
-        try{ hljs.highlightElement(codeEl); }catch(e){}
-      },10);
+      return card;
     }
-
-    return card;
   }
 
-  async function renderSnippets(){
-    const list = document.getElementById('snippets');
-    list.innerHTML = '';
-    const data = await fetchSnippets();
-    if(!data || data.length === 0){
-      list.innerHTML = '<div class="empty">No snippets yet — add one on the right.</div>';
-      return;
+  class SnippetManager{
+    constructor(){
+      this.container = document.getElementById('snippets');
+      this.modal = document.getElementById('modal');
+      this.modalIframe = document.getElementById('modalIframe');
+      this.modalTitle = document.getElementById('modalTitle');
+      this.modalClose = document.getElementById('modalClose');
+      this.modalBackdrop = document.getElementById('modalBackdrop');
+      this.form = document.getElementById('addForm');
+      this.msg = document.getElementById('formMsg');
+      this.search = document.getElementById('search');
     }
-    // show newest first
-    (data||[]).slice().reverse().forEach(s=>{
-      const card = createSnippetCard(s);
-      list.appendChild(card);
-    });
-  }
 
-  // Form handling, search and modal wiring
-  document.addEventListener('DOMContentLoaded', ()=>{
-    renderSnippets();
+    async init(){
+      await this.renderSnippets();
+      this._wireEvents();
+    }
 
-    // initialize highlight.js globally
-    if(window.hljs && hljs.highlightAll){ try{ hljs.highlightAll(); }catch(e){} }
+    async fetchSnippets(){
+      const res = await fetch('/snippets.json');
+      if(!res.ok) return [];
+      return await res.json();
+    }
 
-    // Search filter
-    const search = document.getElementById('search');
-    if (search) {
-      search.addEventListener('input', (e) => {
-        const q = (e.target.value || '').toLowerCase().trim();
+    async renderSnippets(){
+      this.container.innerHTML = '';
+      const data = await this.fetchSnippets();
+      if(!data || data.length === 0){ this.container.innerHTML = '<div class="empty">No snippets yet — add one on the right.</div>'; return; }
+      (data||[]).slice().reverse().forEach(s=>{ const snippet = new Snippet(s); this.container.appendChild(snippet.renderCard(this.openModal.bind(this))); });
+    }
+
+    openModal(srcdoc, title){ this.modalIframe.srcdoc = srcdoc; this.modalTitle.textContent = title || 'Preview'; this.modal.setAttribute('aria-hidden','false'); this.modal.classList.add('open'); document.body.style.overflow = 'hidden'; }
+    closeModal(){ this.modalIframe.srcdoc = ''; this.modal.setAttribute('aria-hidden','true'); this.modal.classList.remove('open'); document.body.style.overflow = ''; }
+
+    _wireEvents(){
+      if(this.modalClose) this.modalClose.addEventListener('click', ()=> this.closeModal());
+      if(this.modalBackdrop) this.modalBackdrop.addEventListener('click', ()=> this.closeModal());
+
+      if(this.search) this.search.addEventListener('input', (e)=>{
+        const q = (e.target.value||'').toLowerCase().trim();
         const cards = document.querySelectorAll('.snippet-card');
-        cards.forEach(c => {
-          const t = (c.querySelector('h3')?.textContent || '').toLowerCase();
-          const d = (c.querySelector('.desc')?.textContent || '').toLowerCase();
-          c.style.display = (t.includes(q) || d.includes(q)) ? '' : 'none';
-        });
+        cards.forEach(c=>{ const t = (c.querySelector('h3')?.textContent||'').toLowerCase(); const d = (c.querySelector('.desc')?.textContent||'').toLowerCase(); c.style.display = (t.includes(q) || d.includes(q)) ? '' : 'none'; });
+      });
+
+      if(this.form) this.form.addEventListener('submit', async (ev)=>{
+        ev.preventDefault(); this.msg.textContent=''; const title = document.getElementById('title').value.trim(); const description = document.getElementById('description').value.trim(); const code = document.getElementById('code').value; if(!title || !code){ this.msg.textContent = 'Please provide Title and CSS code.'; return; }
+        try{ const res = await fetch('/api/addSnippet',{ method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title,description,code}) }); if(!res.ok){ const err = await res.json().catch(()=>({error:'Unknown error'})); this.msg.textContent = 'Error: ' + (err.error || res.statusText); return; } const newSnippet = await res.json(); const sn = new Snippet(newSnippet); this.container.insertBefore(sn.renderCard(this.openModal.bind(this)), this.container.firstChild); this.form.reset(); this.msg.textContent = 'Snippet added.'; setTimeout(()=> this.msg.textContent = '',2500); }catch(e){ this.msg.textContent = 'Request failed.'; }
       });
     }
+  }
 
-    // modal controls
-    const modal = document.getElementById('modal');
-    const modalClose = document.getElementById('modalClose');
-    const modalBackdrop = document.getElementById('modalBackdrop');
-    modalClose.addEventListener('click', closeModal);
-    modalBackdrop.addEventListener('click', closeModal);
-
-    const form = document.getElementById('addForm');
-    const msg = document.getElementById('formMsg');
-    form.addEventListener('submit', async (ev)=>{
-      ev.preventDefault();
-      msg.textContent = '';
-      const title = document.getElementById('title').value.trim();
-      const description = document.getElementById('description').value.trim();
-      const code = document.getElementById('code').value;
-      if(!title || !code){ msg.textContent = 'Please provide Title and CSS code.'; return; }
-
-      try{
-        const res = await fetch('/api/addSnippet', {
-          method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({title, description, code})
-        });
-        if(!res.ok){
-          const err = await res.json().catch(()=>({error:'Unknown error'}));
-          msg.textContent = 'Error: ' + (err.error || res.statusText);
-          return;
-        }
-        const newSnippet = await res.json();
-        // Prepend new snippet locally and re-render
-        const list = document.getElementById('snippets');
-        const card = createSnippetCard(newSnippet);
-        list.insertBefore(card, list.firstChild);
-        form.reset();
-        msg.textContent = 'Snippet added.';
-        setTimeout(()=> msg.textContent = '', 2500);
-      }catch(e){
-        msg.textContent = 'Request failed.';
-      }
-    });
-  });
+  // Initialize manager
+  document.addEventListener('DOMContentLoaded', ()=>{ const manager = new SnippetManager(); manager.init(); if(window.hljs && hljs.highlightAll){ try{ hljs.highlightAll(); }catch(e){} } });
   </script>
 </body>
 </html>

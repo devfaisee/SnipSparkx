@@ -1,6 +1,31 @@
 const fs = require('fs');
 const path = require('path');
 
+class SnippetStore {
+  constructor(rootDir){
+    this.filePath = path.join(rootDir, 'public', 'snippets.json');
+  }
+
+  read(){
+    if(!fs.existsSync(this.filePath)) return [];
+    const raw = fs.readFileSync(this.filePath, 'utf8') || '[]';
+    try{ return JSON.parse(raw); }catch(e){ return []; }
+  }
+
+  write(data){
+    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
+  }
+
+  add({title, description = '', code}){
+    const data = this.read();
+    const id = Date.now().toString();
+    const snippet = { id, title, description, code };
+    data.push(snippet);
+    this.write(data);
+    return snippet;
+  }
+}
+
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
     res.statusCode = 405;
@@ -9,24 +34,15 @@ module.exports = async (req, res) => {
   }
 
   try {
-    const { title, description = '', code } = req.body || {};
+    const payload = req.body || {};
+    const { title, description = '', code } = payload;
     if (!title || !code) {
       res.statusCode = 400;
       return res.json({ error: 'Missing required fields: title and code' });
     }
 
-    const filePath = path.join(process.cwd(), 'public', 'snippets.json');
-    let data = [];
-    if (fs.existsSync(filePath)) {
-      const raw = fs.readFileSync(filePath, 'utf8');
-      data = JSON.parse(raw || '[]');
-    }
-
-    const id = Date.now().toString();
-    const snippet = { id, title, description, code };
-    data.push(snippet);
-
-    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf8');
+    const store = new SnippetStore(process.cwd());
+    const snippet = store.add({ title, description, code });
 
     res.statusCode = 201;
     res.setHeader('Content-Type', 'application/json');
