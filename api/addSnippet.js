@@ -17,13 +17,58 @@ class SnippetStore {
   }
 
   read(){
-    if(!fs.existsSync(this.filePath)) return [];
-    const raw = fs.readFileSync(this.filePath, 'utf8') || '[]';
-    try{ return JSON.parse(raw); }catch(e){ return []; }
+    // Try local file first
+    try{
+      if(fs.existsSync(this.filePath)){
+        const raw = fs.readFileSync(this.filePath, 'utf8') || '[]';
+        return JSON.parse(raw);
+      }
+    }catch(e){
+      // ignore and try GitHub below
+    }
+
+    // If not present locally and GitHub configured, attempt to fetch from GitHub
+    if(this.githubToken && this.githubRepo){
+      try{
+        const [owner, repo] = this.githubRepo.split('/');
+        const apiBase = 'https://api.github.com';
+        const getUrl = `${apiBase}/repos/${owner}/${repo}/contents/${encodeURIComponent(path.relative(process.cwd(), this.filePath))}?ref=${this.branch}`;
+        const headers = { 'Authorization': `Bearer ${this.githubToken}`, 'Accept': 'application/vnd.github+json', 'User-Agent': 'SnipSparkx-Server' };
+        // Use global fetch
+        const res = await fetch(getUrl, { headers });
+        if(res.ok){
+          const payload = await res.json();
+          if(payload && payload.content){
+            const buf = Buffer.from(payload.content, 'base64').toString('utf8');
+            return JSON.parse(buf || '[]');
+          }
+        }
+      }catch(e){
+        // ignore and return empty
+      }
+    }
+
+    return [];
   }
 
   write(data){
-    fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
+    try{
+      const dir = path.dirname(this.filePath);
+      if(!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
+      return true;
+    }catch(err){
+      // If writing to the project filesystem fails (read-only), fall back to /tmp
+      try{
+        const tmp = path.join(require('os').tmpdir(), 'snippets.json');
+        fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
+        console.warn('Wrote snippets to tmp fallback:', tmp);
+        return true;
+      }catch(err2){
+        console.error('Failed to write snippets locally and to tmp fallback', err2);
+        throw err; // rethrow original
+      }
+    }
   }
 
   async add({title, description = '', code}){
