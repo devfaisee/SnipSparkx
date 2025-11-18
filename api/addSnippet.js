@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const jwt = require('jsonwebtoken');
 
 /**
  * SnippetStore — file-backed storage with optional GitHub-backed persistence.
@@ -152,9 +153,39 @@ module.exports = async (req, res) => {
   try {
     const payload = req.body || {};
     const { title, description = '', code, html = '' } = payload;
-    if (!title || !code) {
-      res.statusCode = 400;
-      return res.json({ error: 'Missing required fields: title and code' });
+
+    // If admin auth is configured, require a valid Bearer token.
+    const jwtSecret = process.env.JWT_SECRET || null;
+    const adminUser = process.env.ADMIN_USER || null;
+
+    function verifyToken(token){
+      if(!token || !jwtSecret) return false;
+      try{
+        const payload = jwt.verify(token, jwtSecret);
+        return payload;
+      }catch(e){
+        return false;
+      }
+    }
+
+    let authPayload = null;
+    if(jwtSecret && adminUser){
+      const auth = (req.headers && (req.headers.authorization || req.headers.Authorization)) || '';
+      const match = (''+auth).match(/^Bearer\s+(.+)$/i);
+      if(!match) {
+        res.statusCode = 401; return res.json({ error: 'Authorization required' });
+      }
+      const token = match[1];
+      authPayload = verifyToken(token);
+      if(!authPayload){ res.statusCode = 401; return res.json({ error: 'Invalid or expired token' }); }
+    }
+
+    // Require basic fields
+    if(!title || !code){ res.statusCode = 400; return res.json({ error: 'Missing required fields: title and code' }); }
+
+    // If admin auth is configured, require HTML be present as well
+    if(jwtSecret && adminUser && (!html || !html.toString().trim())){
+      res.statusCode = 400; return res.json({ error: 'Admin submissions require HTML and CSS' });
     }
 
     // Basic server-side sanitization: strip <script> and on* attributes to avoid saving executable script

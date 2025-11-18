@@ -34,25 +34,12 @@
     </section>
 
     <aside class="right">
-      <h2>Add Snippet</h2>
-      <form id="addForm" class="snippet-form">
-        <label>Title
-          <input type="text" id="title" required />
-        </label>
-        <label>Description
-          <input type="text" id="description" />
-        </label>
-        <label>CSS Code
-          <textarea id="code" rows="9" placeholder="e.g. h1{ color: red; }" required></textarea>
-        </label>
-        <label>HTML Markup (optional)
-          <textarea id="html" rows="6" placeholder="Optional HTML to preview, e.g. &lt;h1&gt;Demo&lt;/h1&gt;"> </textarea>
-        </label>
-        <div class="form-actions">
-          <button type="submit" class="btn primary">Add Snippet</button>
-        </div>
-        <div id="formMsg" class="form-msg" aria-live="polite"></div>
-      </form>
+      <div class="admin-cta">
+        <h2>Admin</h2>
+        <p class="muted">Snippets can only be added via the secure admin panel.</p>
+        <p><a class="btn primary" href="/admin.html">Open Admin Panel</a></p>
+        <p class="muted small">Visitors may preview and copy snippets only.</p>
+      </div>
     </aside>
   </main>
 

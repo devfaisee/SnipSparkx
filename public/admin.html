@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SnipSparkx — Admin</title>
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    /* Small admin-specific overrides, mobile-first */
+    .admin-wrap{max-width:900px;margin:20px auto;padding:16px}
+    .card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 6px 18px rgba(20,20,30,.06)}
+    form input, form textarea{width:100%;padding:10px;margin-top:8px;border:1px solid #e6e6ea;border-radius:8px}
+    .row{display:grid;grid-template-columns:1fr;gap:12px}
+    @media(min-width:760px){.row{grid-template-columns:1fr 1fr}}
+    button.primary{background:#0b74ff;color:#fff;border:0;padding:10px 12px;border-radius:8px}
+    .muted{color:#666;font-size:.95rem}
+    .hidden{display:none}
+    .preview-frame{width:100%;height:240px;border:1px solid #ddd;border-radius:8px}
+  </style>
+</head>
+<body>
+  <main class="admin-wrap">
+    <h1>SnipSparkx — Admin</h1>
+
+    <section class="card">
+      <h2>Login</h2>
+      <p class="muted">Sign in using the admin credentials configured in Vercel environment variables.</p>
+      <form id="loginForm">
+        <label>Username
+          <input id="loginUser" name="user" autocomplete="username" required />
+        </label>
+        <label>Password
+          <input id="loginPass" name="pass" type="password" autocomplete="current-password" required />
+        </label>
+        <div style="margin-top:10px">
+          <button class="primary" type="submit">Sign in</button>
+        </div>
+      </form>
+      <p id="loginMsg" class="muted"></p>
+    </section>
+
+    <section id="adminArea" class="card hidden" style="margin-top:16px">
+      <h2>Create Snippet</h2>
+      <p class="muted">HTML and CSS are required. Preview before submit.</p>
+      <form id="snippetForm">
+        <label>Title
+          <input id="title" required />
+        </label>
+        <label>Description
+          <input id="description" />
+        </label>
+        <div class="row">
+          <label>HTML (full snippet HTML allowed)
+            <textarea id="html" rows="6" required></textarea>
+          </label>
+          <label>CSS (styles for the snippet)
+            <textarea id="code" rows="6" placeholder=".my-snippet { color: red }" required></textarea>
+          </label>
+        </div>
+
+        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
+          <button class="primary" type="submit">Add Snippet</button>
+          <button type="button" id="previewBtn">Preview</button>
+          <button type="button" id="logoutBtn" style="margin-left:auto">Logout</button>
+        </div>
+      </form>
+
+      <h3 style="margin-top:14px">Preview</h3>
+      <iframe id="previewFrame" class="preview-frame" sandbox="allow-same-origin"></iframe>
+
+      <p id="adminMsg" class="muted"></p>
+    </section>
+  </main>
+
+  <script>
+    // Minimal JWT helper to store token in localStorage and attach Authorization header
+    const tokenKey = 'snip_admin_token';
+
+    function setMsg(el, txt){ el.textContent = txt || ''; }
+
+    function isLogged(){ return !!localStorage.getItem(tokenKey); }
+
+    function showAdminArea(){ document.getElementById('adminArea').classList.remove('hidden'); }
+    function hideAdminArea(){ document.getElementById('adminArea').classList.add('hidden'); }
+
+    // Login
+    document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      setMsg(document.getElementById('loginMsg'),'');
+      const user = document.getElementById('loginUser').value.trim();
+      const pass = document.getElementById('loginPass').value;
+      try{
+        const res = await fetch('/api/admin/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ user, pass }) });
+        const data = await res.json();
+        if(res.ok && data && data.token){ localStorage.setItem(tokenKey, data.token); setMsg(document.getElementById('loginMsg'),'Signed in'); showAdminArea(); } else {
+          setMsg(document.getElementById('loginMsg'), data && data.error ? data.error : 'Login failed');
+        }
+      }catch(err){ setMsg(document.getElementById('loginMsg'), String(err)); }
+    });
+
+    // Logout
+    document.getElementById('logoutBtn').addEventListener('click', ()=>{ localStorage.removeItem(tokenKey); hideAdminArea(); setMsg(document.getElementById('loginMsg'),'Logged out'); });
+
+    // Preview
+    document.getElementById('previewBtn').addEventListener('click', ()=>{
+      const html = document.getElementById('html').value || '';
+      const css = document.getElementById('code').value || '';
+      const src = `<!doctype html><html><head><meta charset="utf-8"><style>${css}</style></head><body>${html}</body></html>`;
+      const frame = document.getElementById('previewFrame');
+      frame.srcdoc = src;
+    });
+
+    // Submit snippet
+    document.getElementById('snippetForm').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const html = document.getElementById('html').value;
+      const code = document.getElementById('code').value;
+      const msgEl = document.getElementById('adminMsg');
+      setMsg(msgEl,'');
+
+      if(!title || !html || !code){ setMsg(msgEl,'Title, HTML and CSS are required.'); return; }
+
+      const token = localStorage.getItem(tokenKey);
+      try{
+        const res = await fetch('/api/addSnippet', { method: 'POST', headers: { 'Content-Type':'application/json', 'Authorization': token ? `Bearer ${token}` : '' }, body: JSON.stringify({ title, description, html, code }) });
+        const data = await res.json();
+        if(res.ok){ setMsg(msgEl,'Snippet added — id: ' + (data && data.id)); document.getElementById('snippetForm').reset(); document.getElementById('previewFrame').srcdoc = '' } else {
+          setMsg(msgEl, data && data.error ? data.error : 'Failed to add snippet');
+        }
+      }catch(err){ setMsg(msgEl, String(err)); }
+    });
+
+    // Initialize UI
+    (function(){ if(isLogged()) showAdminArea(); else hideAdminArea(); })();
+  </script>
+</body>
+</html>
