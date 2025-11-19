@@ -19,9 +19,13 @@ module.exports = async (req, res) => {
 
   if(!user || !pass){ res.statusCode = 400; return res.end(JSON.stringify({ error: 'Missing credentials' })); }
 
-  if(user !== adminUser){ res.statusCode = 401; return res.end(JSON.stringify({ error: 'Invalid credentials' })); }
+  if(user !== adminUser){ 
+    console.log('User mismatch:', user, adminUser);
+    res.statusCode = 401; return res.end(JSON.stringify({ error: 'Invalid credentials' })); 
+  }
 
   const ok = await bcrypt.compare(pass, adminPassHash);
+  console.log('Password check:', pass, 'Matches:', ok);
   if(!ok){ res.statusCode = 401; return res.end(JSON.stringify({ error: 'Invalid credentials' })); }
 
   // Issue JWT (1 hour)

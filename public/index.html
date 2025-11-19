@@ -110,50 +110,80 @@
 
     renderCard(onPreview){
       const card = document.createElement('article');
-      card.className = 'bg-white/5 rounded-2xl p-5 border border-slate-700 shadow hover:-translate-y-2 transform transition';
+      card.className = 'group flex flex-col h-full bg-slate-800/40 backdrop-blur border border-slate-700/50 rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300';
 
+      // 1. Preview Section (Fixed Aspect Ratio)
+      const previewContainer = document.createElement('div');
+      previewContainer.className = 'relative h-48 bg-slate-900/50 border-b border-slate-700/50 group-hover:border-primary/20 transition-colors overflow-hidden';
+      
+      const iframe = document.createElement('iframe');
+      iframe.className = 'w-full h-full bg-white';
+      iframe.setAttribute('sandbox','allow-scripts');
+      iframe.setAttribute('loading','lazy');
+      iframe.srcdoc = this.getSrcDoc();
+      
+      // Overlay to prevent interaction until clicked (optional, but good for UX)
+      const overlay = document.createElement('div');
+      overlay.className = 'absolute inset-0 bg-transparent';
+      
+      // Fullscreen Button
+      const fsBtn = document.createElement('button');
+      fsBtn.className = 'absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur text-slate-300 hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 shadow-md';
+      fsBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
+      fsBtn.title = 'Fullscreen Preview';
+      fsBtn.onclick = (e) => { e.stopPropagation(); onPreview(this.getSrcDoc(), this.title); };
+
+      previewContainer.appendChild(iframe);
+      previewContainer.appendChild(overlay);
+      previewContainer.appendChild(fsBtn);
+      card.appendChild(previewContainer);
+
+      // 2. Content Section
+      const content = document.createElement('div');
+      content.className = 'flex flex-col flex-1 p-5';
+
+      // Title & Desc
+      const header = document.createElement('div');
       const titleEl = document.createElement('h3');
       titleEl.textContent = this.title;
-      titleEl.className = 'text-slate-100 font-semibold';
-      card.appendChild(titleEl);
-
+      titleEl.className = 'text-lg font-bold text-slate-100 leading-tight truncate';
+      
       const desc = document.createElement('p');
-      desc.className = 'text-slate-300 text-sm mt-2';
+      desc.className = 'text-sm text-slate-400 mt-1 line-clamp-2 h-[2.5em]';
       desc.textContent = this.description;
-      card.appendChild(desc);
+
+      header.appendChild(titleEl);
+      header.appendChild(desc);
+      content.appendChild(header);
+
+      // Code Block
+      const codeContainer = document.createElement('div');
+      codeContainer.className = 'mt-4 relative bg-slate-950/50 rounded-lg border border-slate-800/50 group-hover:border-slate-700 transition-colors flex-1 min-h-[8rem] max-h-[12rem] flex flex-col overflow-hidden';
+
+      const codeHeader = document.createElement('div');
+      codeHeader.className = 'flex items-center justify-between px-3 py-2 border-b border-slate-800/50 bg-slate-900/30';
+      codeHeader.innerHTML = '<span class="text-xs font-mono text-slate-500 uppercase tracking-wider">CSS</span>';
+      
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'text-xs text-primary hover:text-primary-300 transition-colors font-medium';
+      copyBtn.textContent = 'Copy';
+      copyBtn.onclick = async () => {
+        try{ await navigator.clipboard.writeText(this.code); copyBtn.textContent = 'Copied!'; setTimeout(()=> copyBtn.textContent = 'Copy', 1500); }catch(e){}
+      };
+      codeHeader.appendChild(copyBtn);
 
       const pre = document.createElement('pre');
-      pre.className = 'bg-slate-900 rounded-md mt-4 p-3 overflow-auto text-sm font-mono text-slate-100';
+      pre.className = 'p-3 overflow-auto custom-scrollbar text-xs font-mono text-slate-300 flex-1';
       const codeEl = document.createElement('code');
       codeEl.textContent = this.code;
       codeEl.className = 'language-css';
       pre.appendChild(codeEl);
-      card.appendChild(pre);
 
-      const iframe = document.createElement('iframe');
-      iframe.className = 'w-full h-36 rounded-md mt-4 border border-slate-700 bg-white';
-      iframe.setAttribute('sandbox','allow-scripts');
-      iframe.srcdoc = this.getSrcDoc();
-      card.appendChild(iframe);
+      codeContainer.appendChild(codeHeader);
+      codeContainer.appendChild(pre);
+      content.appendChild(codeContainer);
 
-      const actions = document.createElement('div');
-      actions.className = 'flex items-center gap-3 mt-4';
-      const previewBtn = document.createElement('button');
-      previewBtn.className = 'px-3 py-1 bg-slate-800/60 text-slate-200 rounded';
-      previewBtn.textContent = 'Preview';
-      previewBtn.addEventListener('click', ()=> onPreview(this.getSrcDoc(), this.title));
-      actions.appendChild(previewBtn);
-
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'px-3 py-1 bg-slate-800/40 text-slate-200 rounded';
-      copyBtn.title = 'Copy CSS to clipboard';
-      copyBtn.innerHTML = 'Copy';
-      copyBtn.addEventListener('click', async ()=>{
-        try{ await navigator.clipboard.writeText(this.code); copyBtn.textContent = 'Copied'; setTimeout(()=> copyBtn.innerHTML = 'Copy',1500);}catch(e){alert('Copy failed');}
-      });
-      actions.appendChild(copyBtn);
-
-      card.appendChild(actions);
+      card.appendChild(content);
 
       if (window.hljs && hljs.highlightElement) {
         setTimeout(()=>{ try{ hljs.highlightElement(codeEl); }catch(e){} },10);
