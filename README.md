@@ -1,48 +1,52 @@
 # SnipSparkx ⚡
 
-> A modern, serverless CSS snippet manager built for quick experimentation and easy sharing.
+**My CSS Snippet Collection Project**
+
+This is a web app I built for my Object Oriented Programming course at Ziauddin University. It lets you save and preview CSS code snippets with live demos, plus has an admin panel for managing everything.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18-success)
 ![Vercel](https://img.shields.io/badge/deployed%20on-Vercel-black)
 
-## 📖 Overview
-SnipSparkx is a web application that allows developers to store, preview, and copy CSS snippets. It features a **live isolated sandbox** for every snippet, ensuring that styles don't conflict. The project is built with a focus on **Object-Oriented Programming (OOP)** in JavaScript and modern **Serverless Architecture**.
+## 📖 What This Project Does
+I wanted to build something that would help me (and other developers) quickly test CSS ideas and share them. Each snippet gets its own isolated preview so you can see exactly how it looks without any interference from other styles. 
 
-### ✨ Key Features
-- **Live Preview:** Code is rendered in secure, sandboxed iframes.
-- **Admin Dashboard:** Secure JWT-based authentication for adding new content.
-- **Dual Persistence:** 
-  - *Development:* Saves to local JSON files.
-  - *Production:* Commits directly to GitHub repository via API (Git-as-a-Database).
-- **Search:** Real-time client-side filtering.
-- **Design:** Glassmorphism UI using **Tailwind CSS**.
+For the OOP requirements, I used JavaScript classes throughout the frontend and backend. The serverless part was actually pretty cool to figure out - everything runs on Vercel without needing a traditional server.
 
-## 🚀 Tech Stack
-- **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript (ES6+ OOP).
-- **Backend:** Vercel Serverless Functions (Node.js).
-- **Security:** `bcrypt` for password hashing, `jsonwebtoken` for sessions, strict Content Security Policy (CSP) in sandboxes.
-- **Tools:** PostCSS, Highlight.js for syntax highlighting.
+### ✨ What It Can Do
+- **Live Preview:** Every snippet shows up in a sandboxed iframe so you can see it working immediately
+- **Admin Panel:** I built a login system with JWT tokens so only authorized users can add/edit snippets
+- **Smart Saving:** 
+  - When developing locally, it saves to JSON files
+  - In production, it actually commits changes to GitHub automatically (I thought this was a neat idea)
+- **Search:** You can filter through snippets as you type
+- **Modern UI:** Used Tailwind CSS with that frosted glass effect that's popular now
 
-## 🛠️ Installation & Setup
+## 🚀 Technologies I Used
+- **Frontend:** Just HTML, CSS (Tailwind), and vanilla JavaScript with classes (no frameworks - wanted to keep it simple)
+- **Backend:** Vercel's serverless functions seemed perfect for this since I don't need a full server running
+- **Security Stuff:** Used bcrypt for password hashing (learned about this in class) and JWT tokens for login sessions
+- **Extra Tools:** PostCSS for building the CSS, and Highlight.js to make the code look nice with syntax colors
 
-### Prerequisites
-- Node.js v18+
-- A Vercel account (optional, for deployment)
+## 🛠️ How to Run This Project
 
-### 1. Clone the repository
+### What You'll Need
+- Node.js (I used v18 but newer versions should work)
+- Vercel account if you want to deploy it online (but you can run it locally too)
+
+### 1. Get the code
 ```bash
 git clone https://github.com/devfaisee/SnipSparkx.git
 cd SnipSparkx
 ```
 
-### 2. Install dependencies
+### 2. Install the packages
 ```bash
 npm install
 ```
 
-### 3. Configure Environment
-Create a `.env` file in the root directory (see `.env.example`):
+### 3. Set up your environment
+You'll need to create a `.env` file with your settings (check `.env.example` for the template):
 ```env
 # Admin Credentials
 ADMIN_USER=admin
@@ -56,39 +60,43 @@ GITHUB_REPO=username/repo
 GITHUB_BRANCH=main
 ```
 
-### 4. Run Locally
+### 4. Start it up
 ```bash
-# Starts the Vercel dev server and Tailwind watcher
 npm start
 ```
-Visit `http://localhost:3000`.
+Then go to `http://localhost:3000` in your browser.
 
-### 5. Admin Access
-- Go to `/admin.html` or click "Open Admin Panel".
+### 5. Using the admin panel
+- Click "Open Admin Panel" or just go to `/admin.html`
 - **Username:** `admin`
 - **Password:** `admin123`
 
-## 📂 Project Structure
+(Obviously you'd change these in a real deployment!)
+
+## 📂 How I Organized Everything
 ```
-├── api/                # Serverless Backend Functions
-│   ├── addSnippet.js   # Handles snippet creation & persistence
-│   └── admin/          # Auth routes
-├── public/             # Static Frontend Assets
-│   ├── index.html      # Main UI (SnippetManager Class)
-│   ├── admin.html      # Admin Dashboard
-│   └── snippets.json   # Data store
-├── src/                # Source Styles
-│   └── input.css       # Tailwind directives
-└── package.json        # Dependencies & Scripts
+├── api/                # Backend stuff (serverless functions)
+│   ├── addSnippet.js   # Creates new snippets
+│   └── admin/          # Login/auth handling
+├── public/             # Frontend files
+│   ├── index.html      # Main page with all the snippet cards
+│   ├── admin.html      # Admin dashboard for managing snippets
+│   └── snippets.json   # Where all the data gets stored
+├── src/                # CSS source
+│   └── input.css       # Tailwind setup
+└── package.json        # All the npm dependencies
 ```
 
-## 🛡️ Security Measures
-1.  **Sandboxing:** User-generated HTML/CSS is rendered in `iframe` elements with `sandbox="allow-scripts"` to prevent XSS attacks on the main application.
-2.  **Sanitization:** Input is sanitized on both client and server to strip `<script>` tags and event handlers.
-3.  **Environment Variables:** Sensitive credentials are never hardcoded.
+## 🛡️ Security Stuff I Implemented
+I had to think about security since users can submit HTML/CSS:
+1. **Iframe Sandboxing:** All user content runs in sandboxed iframes so malicious code can't mess with the main site
+2. **Input Cleaning:** I strip out `<script>` tags and event handlers both on the frontend and backend 
+3. **Environment Variables:** Kept all passwords and tokens in `.env` files instead of hardcoding them (learned this the hard way!)
 
-## 🎓 Acknowledgments
-Developed for [Ziauddin University/ Object Oriented Programming].
+## 🎓 About This Project
+Built this for my Object Oriented Programming course at Ziauddin University. Had a lot of fun figuring out how to make everything work together!
+
+Special thanks to my classmates who helped test it and gave feedback on the UI.
 
 ## 🧱 System Design Overview
 
@@ -175,16 +183,44 @@ classDiagram
     DeleteSnippetAPI --> AuthHelper
 ```
 
-### Labeled Workflow
-1. **Visitor Experience**
-   - `SnippetManager.init()` fetches `public/snippets.json`, instantiates `Snippet` objects, and renders responsive cards with live iframe previews.
-   - Clicking a card launches the modal split view showing the sandboxed preview alongside HTML/CSS tabs with copy buttons.
-2. **Admin Lifecycle**
-   - `admin.html` checks for a JWT in `localStorage` to toggle between login form and dashboard.
-   - Login calls `/api/admin/login` (bcrypt + JWT). Authenticated admins can create/update/delete snippets via the form, live-preview drafts, and filter existing entries.
-3. **Serverless Backend**
-   - CRUD handlers (`/api/addSnippet`, `/api/updateSnippet`, `/api/deleteSnippet`) call the shared `SnippetStore` after verifying the token through `auth.js`.
-   - `SnippetStore` sanitizes HTML, writes changes to `public/snippets.json`, and optionally syncs to GitHub using the configured PAT/branch.
-4. **Data Propagation**
-   - Updated `snippets.json` is immediately consumed by both the public UI (on next fetch) and the admin list refresh, keeping the experience consistent without manual rebuilds.
+### CRUD Sequence (End-to-End)
+```mermaid
+sequenceDiagram
+    actor Admin
+    participant Browser
+    participant AdminDashboard
+    participant API as Vercel API (add/update/delete)
+    participant Auth as Auth Helper
+    participant Store as SnippetStore
+    participant Data as snippets.json/GitHub
+
+    Admin->>Browser: Submit form (title, description, HTML, CSS)
+    Browser->>AdminDashboard: Trigger form handler
+    AdminDashboard->>API: fetch() with payload + Bearer JWT
+    API->>Auth: verify(token)
+    Auth-->>API: valid/invalid
+    API->>Store: add/update/delete(snippet)
+    Store->>Data: persist locally + optional GitHub commit
+    Data-->>Store: confirm write
+    Store-->>API: return updated snippet or status
+    API-->>AdminDashboard: JSON response (success/error)
+    AdminDashboard-->>Browser: show toast, refresh list, update preview
+```
+
+### How Everything Flows
+1. **When Someone Visits**
+   - The `SnippetManager` class loads up all snippets from the JSON file and creates `Snippet` objects
+   - Each snippet gets rendered as a card with a live preview iframe
+   - Clicking opens a modal where you can see the code and copy it
+2. **Admin Workflow**
+   - Admin page checks for a login token in browser storage
+   - After logging in (with bcrypt password checking), you can create/edit/delete snippets
+   - There's also a preview button to test stuff before saving
+3. **Backend Processing**
+   - All the API endpoints use the same `SnippetStore` class for data handling
+   - Authentication happens through the `auth.js` helper I wrote
+   - Data gets saved locally and can optionally sync to GitHub (which I thought was pretty clever)
+4. **Live Updates**
+   - Since everything reads from the same JSON file, changes show up immediately
+   - No need to rebuild or restart anything during demos
 

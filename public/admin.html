@@ -88,6 +88,7 @@
   </main>
 
   <script>
+    // Keep track of login token and snippet data
     const tokenKey = 'snip_admin_token';
     let allSnippets = [];
     
@@ -106,6 +107,7 @@
         msg: document.getElementById('adminMsg')
     };
 
+    // Helper to show messages with different colors
     function setMsg(txt, type='neutral'){ 
         els.msg.textContent = txt; 
         els.msg.className = 'text-center text-sm mt-2 h-5 ' + (type==='error'?'text-red-400':type==='success'?'text-green-400':'text-slate-400');
@@ -164,7 +166,7 @@
         els.previewContainer.classList.add('hidden');
     }
 
-    // Auth Logic
+    // Login/logout handling
     function checkAuth(){
         if(getToken()){
             els.loginSection.classList.add('hidden');
@@ -196,7 +198,7 @@
 
     els.logoutBtn.onclick = () => { localStorage.removeItem(tokenKey); checkAuth(); };
 
-    // Form Logic
+    // Wire up all the form buttons and stuff
     els.newBtn.onclick = resetForm;
     els.search.oninput = renderList;
 
@@ -261,7 +263,7 @@
         document.getElementById('previewFrame').srcdoc = src;
     };
 
-    // Init
+    // Start the dashboard when page loads
     checkAuth();
 
   </script>

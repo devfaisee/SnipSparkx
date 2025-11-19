@@ -1,6 +1,8 @@
 const fs = require('fs');
 const path = require('path');
 
+// This class handles all the snippet storage stuff
+// I made it work with both local JSON files and GitHub as backup
 class SnippetStore {
   constructor(rootDir){
     this.filePath = path.join(rootDir, 'public', 'snippets.json');
@@ -9,10 +11,12 @@ class SnippetStore {
     this.branch = process.env.GITHUB_BRANCH || 'main';
   }
 
+  // This method cleans up HTML that users submit
+  // Had to learn about security stuff the hard way!
   static cleanHtml(html) {
     if (!html) return '';
     let clean = html.toString();
-    // 1. Strip wrapper tags to extract body content if full doc provided
+    // First, try to get just the body content if someone pasted a full HTML page
     if (/<!doctype|html|body/i.test(clean)) {
        // Try to extract content inside <body>...</body>
        const bodyMatch = clean.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
@@ -29,15 +33,16 @@ class SnippetStore {
        }
     }
 
-    // 2. Security Sanitization
-    // Strip <script> tags
+    // Now remove anything dangerous
+    // No script tags allowed!
     clean = clean.replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '');
-    // Strip on* event handlers
+    // Also remove onclick and other event handlers
     clean = clean.replace(/\son[a-z]+\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, '');
     
     return clean.trim();
   }
 
+  // Try to load snippets from local file first
   async read(){
     try{
       if(fs.existsSync(this.filePath)){
@@ -46,6 +51,7 @@ class SnippetStore {
       }
     }catch(e){}
 
+    // If local file doesn't exist, try GitHub as backup
     if(this.githubToken && this.githubRepo){
       try{
         const [owner, repo] = this.githubRepo.split('/');
@@ -65,6 +71,7 @@ class SnippetStore {
     return [];
   }
 
+  // Save data to local JSON file
   write(data){
     try{
       const dir = path.dirname(this.filePath);
@@ -72,6 +79,7 @@ class SnippetStore {
       fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf8');
       return true;
     }catch(err){
+      // If that fails, try writing to temp directory as backup
       try{
         const tmp = path.join(require('os').tmpdir(), 'snippets.json');
         fs.writeFileSync(tmp, JSON.stringify(data, null, 2), 'utf8');
@@ -84,8 +92,9 @@ class SnippetStore {
     }
   }
 
+  // Save data locally and optionally to GitHub
   async _save(data, message){
-     // GitHub Sync
+     // Try to sync with GitHub if configured
      if(this.githubToken && this.githubRepo){
        try{
          await this._commitToGitHub(data, message);
@@ -93,19 +102,21 @@ class SnippetStore {
          console.error('GitHub commit failed:', err);
        }
      }
-     // Local Sync
+     // Always save locally too
      this.write(data);
   }
 
+  // Add a new snippet
   async add({title, description = '', code, html = ''}){
     const data = await this.read();
-    const id = Date.now().toString();
+    const id = Date.now().toString(); // Simple ID using timestamp
     const snippet = { id, title, description, code, html };
     data.push(snippet);
     await this._save(data, `feat: add snippet "${title}"`);
     return snippet;
   }
 
+  // Update an existing snippet
   async update(id, {title, description, code, html}){
     const data = await this.read();
     const idx = data.findIndex(s => s.id === id);
@@ -125,6 +136,7 @@ class SnippetStore {
     return updated;
   }
 
+  // Delete a snippet
   async delete(id){
     let data = await this.read();
     const exists = data.find(s => s.id === id);
@@ -135,6 +147,7 @@ class SnippetStore {
     return true;
   }
 
+  // This was fun to figure out - commits directly to GitHub!
   async _commitToGitHub(data, message){
     const [owner, repo] = this.githubRepo.split('/');
     const apiBase = 'https://api.github.com';

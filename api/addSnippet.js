@@ -1,23 +1,24 @@
 const SnippetStore = require('./_lib/store');
 const verifyAuth = require('./_lib/auth');
 
+// API endpoint to create new snippets
 module.exports = async (req, res) => {
   if (req.method !== 'POST') {
-    res.statusCode = 405; res.setHeader('Allow', 'POST'); return res.json({ error: 'Method not allowed' });
+    res.statusCode = 405; res.setHeader('Allow', 'POST'); return res.json({ error: 'Method not allowed. This endpoint only accepts POST requests' });
   }
 
   try {
-    // Auth Check
+    // Need these headers for local development
     if(!verifyAuth(req)) {
       res.statusCode = 401; return res.json({ error: 'Unauthorized' });
     }
 
     const { title, description = '', code, html = '' } = req.body || {};
 
-    // Validation
+    // Check that we have the required fields
     if(!title || !code){ res.statusCode = 400; return res.json({ error: 'Missing required fields' }); }
 
-    // Smart Sanitization
+    // Clean up the HTML to remove dangerous stuff
     const cleanHtml = SnippetStore.cleanHtml(html);
 
     const store = new SnippetStore(process.cwd());
