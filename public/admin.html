@@ -4,71 +4,51 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SnipSparkx — Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { theme: { extend: { colors: { primary: '#6c9cff' }, fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'], mono: ['JetBrains Mono','ui-monospace'] } } } }
+  </script>
   <link rel="stylesheet" href="/style.css">
-  <style>
-    /* Small admin-specific overrides, mobile-first */
-    .admin-wrap{max-width:900px;margin:20px auto;padding:16px}
-    .card{background:#fff;border-radius:10px;padding:16px;box-shadow:0 6px 18px rgba(20,20,30,.06)}
-    form input, form textarea{width:100%;padding:10px;margin-top:8px;border:1px solid #e6e6ea;border-radius:8px}
-    .row{display:grid;grid-template-columns:1fr;gap:12px}
-    @media(min-width:760px){.row{grid-template-columns:1fr 1fr}}
-    button.primary{background:#0b74ff;color:#fff;border:0;padding:10px 12px;border-radius:8px}
-    .muted{color:#666;font-size:.95rem}
-    .hidden{display:none}
-    .preview-frame{width:100%;height:240px;border:1px solid #ddd;border-radius:8px}
-  </style>
 </head>
 <body>
-  <main class="admin-wrap">
-    <h1>SnipSparkx — Admin</h1>
+  <main class="max-w-3xl mx-auto px-4 py-8">
+    <h1 class="text-2xl font-semibold text-slate-100 mb-4">SnipSparkx — Admin</h1>
 
-    <section class="card">
-      <h2>Login</h2>
-      <p class="muted">Sign in using the admin credentials configured in Vercel environment variables.</p>
-      <form id="loginForm">
-        <label>Username
-          <input id="loginUser" name="user" autocomplete="username" required />
-        </label>
-        <label>Password
-          <input id="loginPass" name="pass" type="password" autocomplete="current-password" required />
-        </label>
-        <div style="margin-top:10px">
-          <button class="primary" type="submit">Sign in</button>
+    <section class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6 mb-6">
+      <h2 class="text-lg font-medium text-slate-100">Login</h2>
+      <p class="text-slate-300 text-sm mt-1">Sign in using the admin credentials configured in Vercel environment variables.</p>
+      <form id="loginForm" class="mt-4 grid gap-3">
+        <input id="loginUser" name="user" autocomplete="username" required class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-slate-100" placeholder="Username" />
+        <input id="loginPass" name="pass" type="password" autocomplete="current-password" required class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-slate-100" placeholder="Password" />
+        <div class="flex items-center gap-3">
+          <button class="px-4 py-2 bg-gradient-to-b from-primary to-indigo-500 text-slate-900 rounded-lg" type="submit">Sign in</button>
+          <div id="loginMsg" class="text-slate-300 text-sm"></div>
         </div>
       </form>
-      <p id="loginMsg" class="muted"></p>
     </section>
 
-    <section id="adminArea" class="card hidden" style="margin-top:16px">
-      <h2>Create Snippet</h2>
-      <p class="muted">HTML and CSS are required. Preview before submit.</p>
-      <form id="snippetForm">
-        <label>Title
-          <input id="title" required />
-        </label>
-        <label>Description
-          <input id="description" />
-        </label>
-        <div class="row">
-          <label>HTML (full snippet HTML allowed)
-            <textarea id="html" rows="6" required></textarea>
-          </label>
-          <label>CSS (styles for the snippet)
-            <textarea id="code" rows="6" placeholder=".my-snippet { color: red }" required></textarea>
-          </label>
+    <section id="adminArea" class="hidden bg-slate-800/40 border border-slate-700 rounded-2xl p-6">
+      <h2 class="text-lg font-medium text-slate-100">Create Snippet</h2>
+      <p class="text-slate-300 text-sm mt-1">HTML and CSS are required. Preview before submit.</p>
+      <form id="snippetForm" class="mt-4 grid gap-3">
+        <input id="title" required class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-slate-100" placeholder="Title" />
+        <input id="description" class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-slate-100" placeholder="Description (optional)" />
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <textarea id="html" rows="6" required class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-slate-100" placeholder="HTML (full HTML allowed)"></textarea>
+          <textarea id="code" rows="6" required class="px-3 py-2 rounded bg-slate-900 border border-slate-700 text-slate-100 font-mono" placeholder="CSS (styles for the snippet)"></textarea>
         </div>
 
-        <div style="display:flex;gap:8px;margin-top:12px;align-items:center;flex-wrap:wrap">
-          <button class="primary" type="submit">Add Snippet</button>
-          <button type="button" id="previewBtn">Preview</button>
-          <button type="button" id="logoutBtn" style="margin-left:auto">Logout</button>
+        <div class="flex items-center gap-3 mt-2">
+          <button class="px-4 py-2 bg-gradient-to-b from-primary to-indigo-500 text-slate-900 rounded-lg" type="submit">Add Snippet</button>
+          <button type="button" id="previewBtn" class="px-3 py-2 bg-slate-800/40 rounded">Preview</button>
+          <button type="button" id="logoutBtn" class="ml-auto px-3 py-2 bg-slate-700/40 rounded">Logout</button>
         </div>
       </form>
 
-      <h3 style="margin-top:14px">Preview</h3>
-      <iframe id="previewFrame" class="preview-frame" sandbox="allow-same-origin"></iframe>
+      <h3 class="text-sm font-medium text-slate-100 mt-4">Preview</h3>
+      <iframe id="previewFrame" class="w-full h-60 rounded-md border border-slate-700 mt-2" sandbox="allow-same-origin"></iframe>
 
-      <p id="adminMsg" class="muted"></p>
+      <p id="adminMsg" class="text-slate-300 text-sm mt-3"></p>
     </section>
   </main>
 

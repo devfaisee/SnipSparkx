@@ -4,58 +4,79 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SnipSparkx — CSS Snippets</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#6c9cff'
+          },
+          fontFamily: {
+            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
+            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular']
+          }
+        }
+      }
+    }
+  </script>
   <link rel="stylesheet" href="/style.css" />
   <!-- Highlight.js for code styling -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
 </head>
 <body>
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="brand">
-        <h1>SnipSparkx</h1>
-        <p class="lead">Add, preview and copy CSS snippets — live preview powered by isolated iframes.</p>
+  <header class="bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-semibold">SnipSparkx</h1>
+        <p class="text-slate-300 text-sm mt-1">Add, preview and copy CSS snippets — live previews in isolated sandboxes.</p>
       </div>
-      <div class="header-controls">
-        <input id="search" class="search" type="search" placeholder="Search snippets..." aria-label="Search snippets">
+      <div class="w-full sm:w-80">
+        <input id="search" class="w-full bg-slate-800/50 border border-slate-700 placeholder-slate-400 text-slate-100 px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary" type="search" placeholder="Search snippets..." aria-label="Search snippets">
       </div>
     </div>
   </header>
 
-  <main class="container">
-    <section class="left">
-      <div class="section-header">
-        <h2>Snippets</h2>
-        <p class="muted">Browse snippets or add your own. Tap a card to interact.</p>
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+    <section class="md:col-span-2">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-xl font-semibold text-slate-100">Snippets</h2>
+          <p class="text-slate-300 text-sm">Browse snippets or preview them on mobile.</p>
+        </div>
       </div>
-      <div id="snippets" class="snippets-list">
+
+      <div id="snippets" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <!-- snippets will be rendered here -->
       </div>
     </section>
 
-    <aside class="right">
-      <div class="admin-cta">
-        <h2>Admin</h2>
-        <p class="muted">Snippets can only be added via the secure admin panel.</p>
-        <p><a class="btn primary" href="/admin.html">Open Admin Panel</a></p>
-        <p class="muted small">Visitors may preview and copy snippets only.</p>
+    <aside class="md:col-span-1">
+      <div class="bg-slate-800/40 border border-slate-700 rounded-2xl p-6 shadow-xl backdrop-blur">
+        <h3 class="text-lg font-medium text-slate-100">Admin</h3>
+        <p class="text-slate-300 text-sm mt-2">Snippets can only be added via the secure admin panel.</p>
+        <div class="mt-4">
+          <a href="/admin.html" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-b from-primary to-indigo-500 text-slate-900 rounded-lg shadow hover:scale-[1.02] transition">Open Admin Panel</a>
+        </div>
+        <p class="text-slate-400 text-xs mt-3">Visitors may preview and copy snippets only.</p>
       </div>
     </aside>
   </main>
 
-  <footer class="site-footer">
-    <small>Built for quick CSS experimentation. Deploy to Vercel for serverless persistence.</small>
-  </footer>
+  <footer class="text-center text-slate-400 text-sm py-6">Built for quick CSS experimentation. Deploy to Vercel for serverless persistence.</footer>
 
   <!-- Fullscreen modal preview -->
-  <div id="modal" class="modal" aria-hidden="true">
-    <div class="modal-backdrop" id="modalBackdrop"></div>
-    <div class="modal-panel" role="dialog" aria-modal="true">
-      <div class="modal-header">
-        <div id="modalTitle">Preview</div>
-        <button id="modalClose" class="btn small">Close</button>
+  <div id="modal" class="fixed inset-0 hidden items-center justify-center z-50" aria-hidden="true">
+    <div id="modalBackdrop" class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+    <div class="relative z-10 w-full max-w-4xl mx-4">
+      <div class="bg-slate-900 rounded-2xl overflow-hidden border border-slate-700 shadow-2xl">
+        <div class="flex items-center justify-between px-4 py-2 border-b border-slate-700">
+          <div id="modalTitle" class="text-slate-100 font-medium">Preview</div>
+          <button id="modalClose" class="px-3 py-1 text-sm rounded bg-slate-800/60 text-slate-200">Close</button>
+        </div>
+        <iframe id="modalIframe" class="w-full h-[70vh] bg-white" sandbox="allow-same-origin"></iframe>
       </div>
-      <iframe id="modalIframe" class="modal-iframe" sandbox="allow-same-origin"></iframe>
     </div>
   </div>
 
@@ -105,59 +126,49 @@
 
     renderCard(onPreview){
       const card = document.createElement('article');
-      card.className = 'card snippet-card';
+      card.className = 'bg-white/5 rounded-2xl p-5 border border-slate-700 shadow hover:-translate-y-2 transform transition';
 
       const titleEl = document.createElement('h3');
       titleEl.textContent = this.title;
+      titleEl.className = 'text-slate-100 font-semibold';
       card.appendChild(titleEl);
 
       const desc = document.createElement('p');
-      desc.className = 'desc';
+      desc.className = 'text-slate-300 text-sm mt-2';
       desc.textContent = this.description;
       card.appendChild(desc);
 
-      const codeWrap = document.createElement('div');
-      codeWrap.className = 'code-wrap';
       const pre = document.createElement('pre');
-      pre.className = 'code';
+      pre.className = 'bg-slate-900 rounded-md mt-4 p-3 overflow-auto text-sm font-mono text-slate-100';
       const codeEl = document.createElement('code');
       codeEl.textContent = this.code;
       codeEl.className = 'language-css';
       pre.appendChild(codeEl);
-      codeWrap.appendChild(pre);
-
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'btn small';
-      copyBtn.title = 'Copy CSS to clipboard';
-      copyBtn.innerHTML = 'Copy';
-      copyBtn.addEventListener('click', async ()=>{
-        try{ await navigator.clipboard.writeText(this.code); copyBtn.textContent = 'Copied'; setTimeout(()=> copyBtn.innerHTML = 'Copy',1500);}catch(e){alert('Copy failed');}
-      });
-      codeWrap.appendChild(copyBtn);
-      card.appendChild(codeWrap);
-
-      const previewLabel = document.createElement('div');
-      previewLabel.className = 'preview-label';
-      previewLabel.textContent = 'Live Preview';
-      card.appendChild(previewLabel);
+      card.appendChild(pre);
 
       const iframe = document.createElement('iframe');
-      iframe.className = 'preview-iframe';
+      iframe.className = 'w-full h-36 rounded-md mt-4 border border-slate-700 bg-white';
       iframe.setAttribute('sandbox','allow-same-origin');
       iframe.srcdoc = this.getSrcDoc();
       card.appendChild(iframe);
 
       const actions = document.createElement('div');
-      actions.className = 'card-actions';
+      actions.className = 'flex items-center gap-3 mt-4';
       const previewBtn = document.createElement('button');
-      previewBtn.className = 'btn small';
+      previewBtn.className = 'px-3 py-1 bg-slate-800/60 text-slate-200 rounded';
       previewBtn.textContent = 'Preview';
       previewBtn.addEventListener('click', ()=> onPreview(this.getSrcDoc(), this.title));
       actions.appendChild(previewBtn);
 
-      const copyAction = copyBtn.cloneNode(true);
-      copyAction.addEventListener('click', async ()=>{ try{ await navigator.clipboard.writeText(this.code); copyAction.textContent = 'Copied'; setTimeout(()=> copyAction.innerHTML = 'Copy',1500);}catch(e){alert('Copy failed');}});
-      actions.appendChild(copyAction);
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'px-3 py-1 bg-slate-800/40 text-slate-200 rounded';
+      copyBtn.title = 'Copy CSS to clipboard';
+      copyBtn.innerHTML = 'Copy';
+      copyBtn.addEventListener('click', async ()=>{
+        try{ await navigator.clipboard.writeText(this.code); copyBtn.textContent = 'Copied'; setTimeout(()=> copyBtn.innerHTML = 'Copy',1500);}catch(e){alert('Copy failed');}
+      });
+      actions.appendChild(copyBtn);
+
       card.appendChild(actions);
 
       if (window.hljs && hljs.highlightElement) {
@@ -207,7 +218,7 @@
       this.modalIframe.srcdoc = srcdoc;
       this.modalTitle.textContent = title || 'Preview';
       this.modal.setAttribute('aria-hidden','false');
-      this.modal.classList.add('open');
+      this.modal.classList.remove('hidden');
       document.body.style.overflow = 'hidden';
       // focus close button for keyboard users
       setTimeout(()=>{ try{ this.modalClose.focus(); }catch(e){} },50);
@@ -216,7 +227,7 @@
     closeModal(){
       this.modalIframe.srcdoc = '';
       this.modal.setAttribute('aria-hidden','true');
-      this.modal.classList.remove('open');
+      this.modal.classList.add('hidden');
       document.body.style.overflow = '';
       const main = document.querySelector('main.container');
       if(main) main.removeAttribute('aria-hidden');
