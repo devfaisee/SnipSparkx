@@ -110,84 +110,43 @@
 
     renderCard(onPreview){
       const card = document.createElement('article');
-      card.className = 'group flex flex-col h-full bg-slate-800/40 backdrop-blur border border-slate-700/50 rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-lg hover:shadow-primary/5 transition-all duration-300';
+      card.className = 'group flex flex-col h-[22rem] bg-slate-800/40 backdrop-blur border border-slate-700/50 rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer snippet-card';
+      card.onclick = () => onPreview(this);
 
-      // 1. Preview Section (Fixed Aspect Ratio)
+      // 1. Live Preview Section (Fills most of the card)
       const previewContainer = document.createElement('div');
-      previewContainer.className = 'relative h-48 bg-slate-900/50 border-b border-slate-700/50 group-hover:border-primary/20 transition-colors overflow-hidden';
+      previewContainer.className = 'relative flex-1 bg-slate-900/50 border-b border-slate-700/50 group-hover:border-primary/20 transition-colors overflow-hidden';
       
       const iframe = document.createElement('iframe');
-      iframe.className = 'w-full h-full bg-white';
+      iframe.className = 'w-full h-full bg-white pointer-events-none'; // Immutable in card view
       iframe.setAttribute('sandbox','allow-scripts');
       iframe.setAttribute('loading','lazy');
       iframe.srcdoc = this.getSrcDoc();
       
-      // Overlay to prevent interaction until clicked (optional, but good for UX)
+      // Hover Overlay
       const overlay = document.createElement('div');
-      overlay.className = 'absolute inset-0 bg-transparent';
-      
-      // Fullscreen Button
-      const fsBtn = document.createElement('button');
-      fsBtn.className = 'absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur text-slate-300 hover:text-white rounded-lg opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0 shadow-md';
-      fsBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h6v6"/><path d="M9 21H3v-6"/><path d="M21 3l-7 7"/><path d="M3 21l7-7"/></svg>';
-      fsBtn.title = 'Fullscreen Preview';
-      fsBtn.onclick = (e) => { e.stopPropagation(); onPreview(this.getSrcDoc(), this.title); };
+      overlay.className = 'absolute inset-0 bg-slate-900/20 backdrop-blur-[1px] opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center';
+      overlay.innerHTML = '<span class="px-4 py-2 bg-slate-900/90 text-slate-100 text-sm font-medium rounded-full shadow-lg transform translate-y-4 group-hover:translate-y-0 transition-transform">View Code & Preview</span>';
 
       previewContainer.appendChild(iframe);
       previewContainer.appendChild(overlay);
-      previewContainer.appendChild(fsBtn);
       card.appendChild(previewContainer);
 
-      // 2. Content Section
-      const content = document.createElement('div');
-      content.className = 'flex flex-col flex-1 p-5';
+      // 2. Content Section (Minimal Footer)
+      const footer = document.createElement('div');
+      footer.className = 'p-4 bg-slate-900/20 h-20 flex flex-col justify-center';
 
-      // Title & Desc
-      const header = document.createElement('div');
       const titleEl = document.createElement('h3');
       titleEl.textContent = this.title;
-      titleEl.className = 'text-lg font-bold text-slate-100 leading-tight truncate';
+      titleEl.className = 'text-sm font-bold text-slate-200 truncate group-hover:text-primary transition-colors';
       
       const desc = document.createElement('p');
-      desc.className = 'text-sm text-slate-400 mt-1 line-clamp-2 h-[2.5em]';
-      desc.textContent = this.description;
+      desc.className = 'text-xs text-slate-400 mt-1 truncate';
+      desc.textContent = this.description || 'No description';
 
-      header.appendChild(titleEl);
-      header.appendChild(desc);
-      content.appendChild(header);
-
-      // Code Block
-      const codeContainer = document.createElement('div');
-      codeContainer.className = 'mt-4 relative bg-slate-950/50 rounded-lg border border-slate-800/50 group-hover:border-slate-700 transition-colors flex-1 min-h-[8rem] max-h-[12rem] flex flex-col overflow-hidden';
-
-      const codeHeader = document.createElement('div');
-      codeHeader.className = 'flex items-center justify-between px-3 py-2 border-b border-slate-800/50 bg-slate-900/30';
-      codeHeader.innerHTML = '<span class="text-xs font-mono text-slate-500 uppercase tracking-wider">CSS</span>';
-      
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'text-xs text-primary hover:text-primary-300 transition-colors font-medium';
-      copyBtn.textContent = 'Copy';
-      copyBtn.onclick = async () => {
-        try{ await navigator.clipboard.writeText(this.code); copyBtn.textContent = 'Copied!'; setTimeout(()=> copyBtn.textContent = 'Copy', 1500); }catch(e){}
-      };
-      codeHeader.appendChild(copyBtn);
-
-      const pre = document.createElement('pre');
-      pre.className = 'p-3 overflow-auto custom-scrollbar text-xs font-mono text-slate-300 flex-1';
-      const codeEl = document.createElement('code');
-      codeEl.textContent = this.code;
-      codeEl.className = 'language-css';
-      pre.appendChild(codeEl);
-
-      codeContainer.appendChild(codeHeader);
-      codeContainer.appendChild(pre);
-      content.appendChild(codeContainer);
-
-      card.appendChild(content);
-
-      if (window.hljs && hljs.highlightElement) {
-        setTimeout(()=>{ try{ hljs.highlightElement(codeEl); }catch(e){} },10);
-      }
+      footer.appendChild(titleEl);
+      footer.appendChild(desc);
+      card.appendChild(footer);
 
       return card;
     }
@@ -197,12 +156,10 @@
     constructor(){
       this.container = document.getElementById('snippets');
       this.modal = document.getElementById('modal');
-      this.modalIframe = document.getElementById('modalIframe');
-      this.modalTitle = document.getElementById('modalTitle');
-      this.modalClose = document.getElementById('modalClose');
+      // We will rebuild the modal content dynamically
+      this.modalContent = this.modal.querySelector('.relative.z-10'); 
       this.modalBackdrop = document.getElementById('modalBackdrop');
-      this.form = document.getElementById('addForm');
-      this.msg = document.getElementById('formMsg');
+      this.modalClose = document.getElementById('modalClose');
       this.search = document.getElementById('search');
     }
 
@@ -224,28 +181,87 @@
       (data||[]).slice().reverse().forEach(s=>{ const snippet = new Snippet(s); this.container.appendChild(snippet.renderCard(this.openModal.bind(this))); });
     }
 
-    openModal(srcdoc, title){
-      // set aria-hidden on main content to remove it from assistive tree
-      const main = document.querySelector('main.container');
-      if(main) main.setAttribute('aria-hidden','true');
-      this.prevFocus = document.activeElement;
-      this.modalIframe.srcdoc = srcdoc;
-      this.modalTitle.textContent = title || 'Preview';
-      this.modal.setAttribute('aria-hidden','false');
-      this.modal.classList.remove('hidden');
+    openModal(snippet){
+      // Disable body scroll
       document.body.style.overflow = 'hidden';
-      // focus close button for keyboard users
-      setTimeout(()=>{ try{ this.modalClose.focus(); }catch(e){} },50);
+      
+      // Build Modal HTML Dynamically for "Professional" Split View
+      const htmlCode = (snippet.html || '').replace(/</g,'&lt;');
+      const cssCode = snippet.code;
+      
+      this.modalContent.innerHTML = `
+        <div class="bg-slate-900 rounded-xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col md:flex-row h-[85vh] w-full max-w-7xl mx-auto">
+          <!-- Left: Preview -->
+          <div class="w-full md:w-1/2 flex flex-col border-b md:border-b-0 md:border-r border-slate-700">
+            <div class="flex items-center justify-between px-4 py-3 border-b border-slate-700 bg-slate-800/50">
+               <h3 class="text-slate-100 font-medium truncate flex-1 mr-4">${snippet._esc(snippet.title)}</h3>
+               <button id="modalCloseBtn" class="text-slate-400 hover:text-white transition"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+            </div>
+            <div class="flex-1 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHBhdGggZD0iTTEgMWgydjJIMUMxeiIgZmlsbD0iIzIyMiIgZmlsbC1ydWxlPSJldmVub2RkIi8+PC9zdmc+')] bg-slate-950 relative">
+              <iframe class="w-full h-full absolute inset-0 bg-white" sandbox="allow-scripts" srcdoc="${snippet.getSrcDoc().replace(/"/g,'&quot;')}"></iframe>
+            </div>
+          </div>
+
+          <!-- Right: Code -->
+          <div class="w-full md:w-1/2 flex flex-col bg-slate-900">
+             <!-- Tabs -->
+             <div class="flex items-center px-2 pt-2 gap-2 border-b border-slate-700 bg-slate-800/30">
+                <button class="tab-btn px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary transition-colors" data-target="css-panel">CSS</button>
+                <button class="tab-btn px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-colors" data-target="html-panel">HTML</button>
+                <div class="flex-1"></div>
+                <button class="text-xs text-slate-400 hover:text-white mr-2" onclick="navigator.clipboard.writeText(this.getAttribute('data-code') === 'css' ? \`${cssCode.replace(/`/g,'\\`')}\` : \`${htmlCode.replace(/`/g,'\\`').replace(/&lt;/g,'<')}\`)">Copy Current</button>
+             </div>
+
+             <!-- Code Areas -->
+             <div class="flex-1 overflow-hidden relative group">
+                <div id="css-panel" class="code-panel h-full overflow-auto custom-scrollbar p-4">
+                    <pre><code class="language-css text-sm font-mono leading-relaxed">${cssCode}</code></pre>
+                </div>
+                <div id="html-panel" class="code-panel h-full overflow-auto custom-scrollbar p-4 hidden">
+                    <pre><code class="language-html text-sm font-mono leading-relaxed">${htmlCode || '&lt;!-- No HTML provided --&gt;'}</code></pre>
+                </div>
+             </div>
+             
+             <div class="p-4 border-t border-slate-700 bg-slate-800/20 text-xs text-slate-500">
+                ${snippet._esc(snippet.description)}
+             </div>
+          </div>
+        </div>
+      `;
+
+      this.modal.classList.remove('hidden');
+      this.modal.classList.add('flex');
+      
+      // Wire up close button
+      document.getElementById('modalCloseBtn').onclick = () => this.closeModal();
+
+      // Wire up tabs
+      const tabs = this.modalContent.querySelectorAll('.tab-btn');
+      tabs.forEach(btn => {
+          btn.onclick = () => {
+              // Reset tabs
+              tabs.forEach(t => { t.className = 'tab-btn px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-colors'; });
+              // Activate clicked
+              btn.className = 'tab-btn px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary transition-colors';
+              
+              // Toggle panels
+              const target = btn.getAttribute('data-target');
+              this.modalContent.querySelectorAll('.code-panel').forEach(p => p.classList.add('hidden'));
+              document.getElementById(target).classList.remove('hidden');
+          };
+      });
+
+      // Highlight syntax
+      if(window.hljs) {
+          this.modalContent.querySelectorAll('pre code').forEach(el => hljs.highlightElement(el));
+      }
     }
 
     closeModal(){
-      this.modalIframe.srcdoc = '';
-      this.modal.setAttribute('aria-hidden','true');
       this.modal.classList.add('hidden');
+      this.modal.classList.remove('flex');
+      this.modalContent.innerHTML = ''; // Clear to stop iframe
       document.body.style.overflow = '';
-      const main = document.querySelector('main.container');
-      if(main) main.removeAttribute('aria-hidden');
-      try{ if(this.prevFocus && this.prevFocus.focus) this.prevFocus.focus(); }catch(e){}
     }
 
     _wireEvents(){
