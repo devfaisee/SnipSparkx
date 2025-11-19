@@ -1,12 +1,5 @@
 [
   {
-    "id": "rainbow-text",
-    "title": "Rainbow Text",
-    "description": "A colorful animated rainbow text effect.",
-    "code": "h1{background:linear-gradient(90deg,#ff6b6b,#f7d794,#6bc1ff,#9bff6b);-webkit-background-clip:text;background-clip:text;color:transparent;animation:rainbow 3s linear infinite}\n@keyframes rainbow{0%{filter:hue-rotate(0deg)}50%{filter:hue-rotate(180deg)}100%{filter:hue-rotate(360deg)}}\n",
-    "html": "<div class=\"demo\"><h1>Rainbow</h1><p>Try the rainbow text effect.</p></div>"
-  },
-  {
     "id": "1763531933613",
     "title": "hover pulse",
     "description": "",
