@@ -4,22 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SnipSparkx — CSS Snippets</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            primary: '#6c9cff'
-          },
-          fontFamily: {
-            sans: ['Inter', 'ui-sans-serif', 'system-ui'],
-            mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular']
-          }
-        }
-      }
-    }
-  </script>
   <link rel="stylesheet" href="/style.css" />
   <!-- Highlight.js for code styling -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
@@ -75,7 +59,7 @@
           <div id="modalTitle" class="text-slate-100 font-medium">Preview</div>
           <button id="modalClose" class="px-3 py-1 text-sm rounded bg-slate-800/60 text-slate-200">Close</button>
         </div>
-        <iframe id="modalIframe" class="w-full h-[70vh] bg-white" sandbox="allow-same-origin"></iframe>
+        <iframe id="modalIframe" class="w-full h-[70vh] bg-white" sandbox="allow-same-origin allow-scripts"></iframe>
       </div>
     </div>
   </div>
@@ -148,7 +132,7 @@
 
       const iframe = document.createElement('iframe');
       iframe.className = 'w-full h-36 rounded-md mt-4 border border-slate-700 bg-white';
-      iframe.setAttribute('sandbox','allow-same-origin');
+      iframe.setAttribute('sandbox','allow-same-origin allow-scripts');
       iframe.srcdoc = this.getSrcDoc();
       card.appendChild(iframe);
 

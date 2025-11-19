@@ -4,10 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SnipSparkx — Admin</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = { theme: { extend: { colors: { primary: '#6c9cff' }, fontFamily: { sans: ['Inter','ui-sans-serif','system-ui'], mono: ['JetBrains Mono','ui-monospace'] } } } }
-  </script>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -46,7 +42,7 @@
       </form>
 
       <h3 class="text-sm font-medium text-slate-100 mt-4">Preview</h3>
-      <iframe id="previewFrame" class="w-full h-60 rounded-md border border-slate-700 mt-2" sandbox="allow-same-origin"></iframe>
+      <iframe id="previewFrame" class="w-full h-60 rounded-md border border-slate-700 mt-2" sandbox="allow-same-origin allow-scripts"></iframe>
 
       <p id="adminMsg" class="text-slate-300 text-sm mt-3"></p>
     </section>
