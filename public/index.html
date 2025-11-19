@@ -110,18 +110,32 @@
 
     renderCard(onPreview){
       const card = document.createElement('article');
-      card.className = 'group flex flex-col h-[22rem] bg-slate-800/40 backdrop-blur border border-slate-700/50 rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer snippet-card';
+      card.className = 'group flex flex-col bg-slate-800/40 backdrop-blur border border-slate-700/50 rounded-xl overflow-hidden hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10 transition-all duration-300 cursor-pointer snippet-card';
       card.onclick = () => onPreview(this);
 
-      // 1. Live Preview Section (Fills most of the card)
+      // 1. Live Preview Section (auto resizes)
       const previewContainer = document.createElement('div');
-      previewContainer.className = 'relative flex-1 bg-slate-900/50 border-b border-slate-700/50 group-hover:border-primary/20 transition-colors overflow-hidden';
+      previewContainer.className = 'relative bg-slate-900/50 border-b border-slate-700/50 group-hover:border-primary/20 transition-colors overflow-hidden';
+      previewContainer.style.minHeight = '16rem';
       
       const iframe = document.createElement('iframe');
-      iframe.className = 'w-full h-full bg-white pointer-events-none'; // Immutable in card view
+      iframe.className = 'w-full bg-white pointer-events-none';
+      iframe.style.minHeight = '16rem';
       iframe.setAttribute('sandbox','allow-scripts');
       iframe.setAttribute('loading','lazy');
       iframe.srcdoc = this.getSrcDoc();
+      iframe.addEventListener('load', () => {
+        try {
+          const doc = iframe.contentDocument || iframe.contentWindow?.document;
+          const height = doc?.body?.scrollHeight || 0;
+          const clamped = Math.max(240, Math.min(height, 640));
+          iframe.style.height = clamped + 'px';
+          previewContainer.style.height = clamped + 'px';
+        } catch (err) {
+          iframe.style.height = '260px';
+          previewContainer.style.height = '260px';
+        }
+      });
       
       // Hover Overlay
       const overlay = document.createElement('div');
@@ -134,14 +148,14 @@
 
       // 2. Content Section (Minimal Footer)
       const footer = document.createElement('div');
-      footer.className = 'p-4 bg-slate-900/20 h-20 flex flex-col justify-center';
+      footer.className = 'p-4 bg-slate-900/20 flex flex-col justify-center gap-1';
 
       const titleEl = document.createElement('h3');
       titleEl.textContent = this.title;
-      titleEl.className = 'text-sm font-bold text-slate-200 truncate group-hover:text-primary transition-colors';
+      titleEl.className = 'text-sm font-bold text-slate-200 group-hover:text-primary transition-colors';
       
       const desc = document.createElement('p');
-      desc.className = 'text-xs text-slate-400 mt-1 truncate';
+      desc.className = 'text-xs text-slate-400';
       desc.textContent = this.description || 'No description';
 
       footer.appendChild(titleEl);
@@ -186,8 +200,9 @@
       document.body.style.overflow = 'hidden';
       
       // Build Modal HTML Dynamically for "Professional" Split View
-      const htmlCode = (snippet.html || '').replace(/</g,'&lt;');
-      const cssCode = snippet.code;
+      const rawHtml = snippet.html || '';
+      const htmlCode = rawHtml.replace(/</g,'&lt;');
+      const cssCode = snippet.code || '';
       
       this.modalContent.innerHTML = `
         <div class="bg-slate-900 rounded-xl overflow-hidden border border-slate-700 shadow-2xl flex flex-col md:flex-row h-[85vh] w-full max-w-7xl mx-auto">
@@ -206,10 +221,15 @@
           <div class="w-full md:w-1/2 flex flex-col bg-slate-900">
              <!-- Tabs -->
              <div class="flex items-center px-2 pt-2 gap-2 border-b border-slate-700 bg-slate-800/30">
-                <button class="tab-btn px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary transition-colors" data-target="css-panel">CSS</button>
-                <button class="tab-btn px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-colors" data-target="html-panel">HTML</button>
+                <div class="flex gap-2">
+                  <button class="tab-btn px-4 py-2 text-sm font-medium text-primary border-b-2 border-primary transition-colors" data-target="css-panel">CSS</button>
+                  <button class="tab-btn px-4 py-2 text-sm font-medium text-slate-400 hover:text-slate-200 border-b-2 border-transparent transition-colors" data-target="html-panel">HTML</button>
+                </div>
                 <div class="flex-1"></div>
-                <button class="text-xs text-slate-400 hover:text-white mr-2" onclick="navigator.clipboard.writeText(this.getAttribute('data-code') === 'css' ? \`${cssCode.replace(/`/g,'\\`')}\` : \`${htmlCode.replace(/`/g,'\\`').replace(/&lt;/g,'<')}\`)">Copy Current</button>
+                <div class="flex items-center gap-2">
+                  <button class="copy-btn text-xs text-slate-300 hover:text-white px-3 py-1 rounded border border-slate-600/60" data-copy="css">Copy CSS</button>
+                  <button class="copy-btn text-xs text-slate-300 hover:text-white px-3 py-1 rounded border border-slate-600/60" data-copy="html">Copy HTML</button>
+                </div>
              </div>
 
              <!-- Code Areas -->
@@ -249,6 +269,23 @@
               this.modalContent.querySelectorAll('.code-panel').forEach(p => p.classList.add('hidden'));
               document.getElementById(target).classList.remove('hidden');
           };
+      });
+
+      // Copy buttons
+      const copyButtons = this.modalContent.querySelectorAll('.copy-btn');
+      copyButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          const type = btn.getAttribute('data-copy');
+          const payload = type === 'css' ? cssCode : (rawHtml || '<!-- No HTML provided -->');
+          navigator.clipboard.writeText(payload).then(() => {
+            const original = btn.textContent;
+            btn.textContent = type === 'css' ? 'CSS Copied' : 'HTML Copied';
+            setTimeout(() => btn.textContent = original, 1500);
+          }).catch(() => {
+            btn.textContent = 'Copy failed';
+            setTimeout(() => btn.textContent = type === 'css' ? 'Copy CSS' : 'Copy HTML', 1500);
+          });
+        });
       });
 
       // Highlight syntax
