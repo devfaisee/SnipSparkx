@@ -24,7 +24,7 @@
     "id": "1763535055543",
     "title": "hi",
     "description": "",
-    "code": ".h1{color:re;\n}",
+    "code": ".h1{color:red;\n}",
     "html": "<h1>hello world </h1."
   }
 ]
