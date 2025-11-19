@@ -7,13 +7,6 @@
     "html": "<div class=\"demo\"><h1>Rainbow</h1><p>Try the rainbow text effect.</p></div>"
   },
   {
-    "id": "1763531287149",
-    "title": "Glow button",
-    "description": "a glowing button",
-    "code": "body {\n  background: radial-gradient(ellipse at top left, #1e1e2f 60%, #3a3a70 100%);\n  min-height: 100vh;\n  display: flex;\n  justify-content: center;\n  align-items: center;\n}\n\n.glow-btn-container {\n  display: flex;\n  justify-content: center;\n  align-items: center;\n  width: 100vw;\n  height: 100vh;\n}\n\n.glow-btn {\n  position: relative;\n  padding: 20px 50px;\n  font-family: 'Poppins', sans-serif;\n  font-size: 2rem;\n  color: #fff;\n  background: rgba(30,30,47,0.6);\n  border-radius: 20px;\n  border: none;\n  outline: none;\n  cursor: pointer;\n  box-shadow: 0 4px 30px rgba(50,150,255,0.3);\n  overflow: hidden;\n  z-index: 1;\n  transition: box-shadow 0.4s ease, background 0.4s ease;\n}\n\n.glow-btn::before {\n  content: '';\n  position: absolute;\n  left: -50%;\n  top: -50%;\n  width: 200%;\n  height: 200%;\n  background: linear-gradient(135deg, #00ffea, #ff00c8, #fffb00, #00ffea);\n  background-size: 400% 400%;\n  border-radius: 40px;\n  filter: blur(30px);\n  opacity: 0.65;\n  animation: glowing 4s infinite linear;\n  z-index: -1;\n}\n\n@keyframes glowing {\n  0% {background-position: 0% 50%;}\n  50% {background-position: 100% 50%;}\n  100% {background-position: 0% 50%;}\n}\n\n.glow-btn:hover {\n  box-shadow: 0 0 80px #00ffea, 0 0 40px #ff00c8;\n  background: rgba(30,30,47,0.85);\n}",
-    "html": "<div class=\"glow-btn-container\">\n  <button class=\"glow-btn\">Glow Me!</button>\n</div>"
-  },
-  {
     "id": "1763531933613",
     "title": "hover pulse",
     "description": "",
