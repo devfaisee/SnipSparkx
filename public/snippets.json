@@ -19,5 +19,12 @@
     "description": "",
     "code": ".glow-btn {\n  padding: 12px 32px;\n  background: #111;\n  color: #fff;\n  border: 2px solid #0ff;\n  border-radius: 12px;\n  font-size: 18px;\n  cursor: pointer;\n  transition: transform .3s ease, box-shadow .3s ease;\n  box-shadow: 0 0 10px #0ff;\n}\n.glow-btn:hover {\n  box-shadow: 0 0 20px #0ff, 0 0 40px #0ff inset;\n  transform: scale(1.05);\n}\n",
     "html": "<button class=\"glow-btn\">Click Me</button>\n"
+  },
+  {
+    "id": "1763535055543",
+    "title": "hi",
+    "description": "",
+    "code": ".h1{color:red:\n]",
+    "html": "<h1>heelo worls </h1."
   }
 ]
