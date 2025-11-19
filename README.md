@@ -1,74 +1,91 @@
-# SnipSparkx
+# SnipSparkx ⚡
 
-This repository is a ready-to-deploy static site for managing CSS snippets with live previews.
+> A modern, serverless CSS snippet manager built for quick experimentation and easy sharing.
 
-Structure:
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Node](https://img.shields.io/badge/node-%3E%3D18-success)
+![Vercel](https://img.shields.io/badge/deployed%20on-Vercel-black)
 
-- `public/` - static files served by Vercel
-	- `index.html` - main UI
-	- `style.css` - site styling
-	- `snippets.json` - stored CSS snippets
-- `api/` - Vercel serverless functions
-	- `addSnippet.js` - POST endpoint to add snippets
-- `package.json` - scripts for `vercel dev`
+## 📖 Overview
+SnipSparkx is a web application that allows developers to store, preview, and copy CSS snippets. It features a **live isolated sandbox** for every snippet, ensuring that styles don't conflict. The project is built with a focus on **Object-Oriented Programming (OOP)** in JavaScript and modern **Serverless Architecture**.
 
-Deploy:
+### ✨ Key Features
+- **Live Preview:** Code is rendered in secure, sandboxed iframes.
+- **Admin Dashboard:** Secure JWT-based authentication for adding new content.
+- **Dual Persistence:** 
+  - *Development:* Saves to local JSON files.
+  - *Production:* Commits directly to GitHub repository via API (Git-as-a-Database).
+- **Search:** Real-time client-side filtering.
+- **Design:** Glassmorphism UI using **Tailwind CSS**.
 
-1. Push this repo to GitHub.
-2. Import the repo into Vercel (https://vercel.com) and deploy — Vercel will serve the `public/` folder and the `api/` functions automatically.
+## 🚀 Tech Stack
+- **Frontend:** HTML5, Tailwind CSS, Vanilla JavaScript (ES6+ OOP).
+- **Backend:** Vercel Serverless Functions (Node.js).
+- **Security:** `bcrypt` for password hashing, `jsonwebtoken` for sessions, strict Content Security Policy (CSP) in sandboxes.
+- **Tools:** PostCSS, Highlight.js for syntax highlighting.
 
-Local dev:
+## 🛠️ Installation & Setup
 
-Install the Vercel CLI and run:
+### Prerequisites
+- Node.js v18+
+- A Vercel account (optional, for deployment)
 
+### 1. Clone the repository
 ```bash
-npm install -g vercel
-npm run dev
+git clone https://github.com/devfaisee/SnipSparkx.git
+cd SnipSparkx
 ```
 
-Visit `http://localhost:3000` (or the port shown by `vercel dev`).
-
-Notes:
-
-- The serverless function writes to `public/snippets.json` when adding snippets. On Vercel deployments this filesystem change may be ephemeral; for persistent storage integrate a database or external storage.
-
-GitHub-backed persistence (recommended, industry-grade)
-
-This project supports committing new snippets directly to the repository using the GitHub Contents API. This provides durable storage (snippets persisted in the repo) and is a minimal, dependency-free way to make storage persistent.
-
-To enable GitHub-backed persistence on Vercel:
-
-1. Create a GitHub personal access token with `repo` scope (or `public_repo` for public repos only).
-2. Set the following Environment Variables in your Vercel project settings:
-	- `GITHUB_TOKEN`: your token
-	- `GITHUB_REPO`: the repository in `owner/repo` format (e.g. `devfaisee/SnipSparkx`)
-	- Optional: `GITHUB_BRANCH` (defaults to `main`)
-
-When these variables are present the serverless function at `api/addSnippet.js` will attempt to update `public/snippets.json` in the repository. If the GitHub upload fails, the function falls back to writing the file on the function's filesystem (useful for local `vercel dev`).
-
-Security note: keep `GITHUB_TOKEN` secret. Use Vercel's Environment Variables UI to store it.
-
-## Admin & deployment (env vars)
-
-To enable admin-only snippet creation you must set these environment variables (for example in Vercel):
-
-- `ADMIN_USER` — admin username
-- `ADMIN_PASS_HASH` — bcrypt hash of the admin password (store this in Vercel envs)
-- `JWT_SECRET` — secret used to sign tokens (keep this secret)
-- `GITHUB_TOKEN` and `GITHUB_REPO` — optional: used by the server to commit `public/snippets.json` back to the repo for persistence
-
-When `ADMIN_USER`, `ADMIN_PASS_HASH`, and `JWT_SECRET` are all present, `/api/addSnippet` requires a Bearer token issued by POSTing credentials to `/api/admin/login`.
-
-Generating a bcrypt password hash (example)
-
-Install `bcryptjs` locally or use a small Node snippet to generate a hash. Example using a quick Node one-liner (you can run this locally):
-
+### 2. Install dependencies
 ```bash
-# install temporarily if needed
-npm install bcryptjs
-node -e "const b=require('bcryptjs');console.log(b.hashSync(process.argv[1], 10));" 'your-strong-password'
+npm install
 ```
 
-Copy the output and set it as the `ADMIN_PASS_HASH` environment variable in Vercel.
+### 3. Configure Environment
+Create a `.env` file in the root directory (see `.env.example`):
+```env
+# Admin Credentials
+ADMIN_USER=admin
+# Hash for 'admin123': $2a$10$sd23zeZlmqV1val6HiXKguw3C.l5opNbaj3w2jqV/QdQsMRuPvKsm
+ADMIN_PASS_HASH=$2a$10$sd23zeZlmqV1val6HiXKguw3C.l5opNbaj3w2jqV/QdQsMRuPvKsm
+JWT_SECRET=your_super_secret_key
 
-For local development you can run `vercel dev` and export these envs locally. If the envs are not set the server will accept snippet posts (for local convenience), but for production you should set them to enforce admin-only creation.
+# GitHub Storage (Optional)
+GITHUB_TOKEN=your_github_pat
+GITHUB_REPO=username/repo
+GITHUB_BRANCH=main
+```
+
+### 4. Run Locally
+```bash
+# Starts the Vercel dev server and Tailwind watcher
+npm start
+```
+Visit `http://localhost:3000`.
+
+### 5. Admin Access
+- Go to `/admin.html` or click "Open Admin Panel".
+- **Username:** `admin`
+- **Password:** `admin123`
+
+## 📂 Project Structure
+```
+├── api/                # Serverless Backend Functions
+│   ├── addSnippet.js   # Handles snippet creation & persistence
+│   └── admin/          # Auth routes
+├── public/             # Static Frontend Assets
+│   ├── index.html      # Main UI (SnippetManager Class)
+│   ├── admin.html      # Admin Dashboard
+│   └── snippets.json   # Data store
+├── src/                # Source Styles
+│   └── input.css       # Tailwind directives
+└── package.json        # Dependencies & Scripts
+```
+
+## 🛡️ Security Measures
+1.  **Sandboxing:** User-generated HTML/CSS is rendered in `iframe` elements with `sandbox="allow-scripts"` to prevent XSS attacks on the main application.
+2.  **Sanitization:** Input is sanitized on both client and server to strip `<script>` tags and event handlers.
+3.  **Environment Variables:** Sensitive credentials are never hardcoded.
+
+## 🎓 Acknowledgments
+Developed for [Ziaudding Univerisy/ Object Oriented Programming].
