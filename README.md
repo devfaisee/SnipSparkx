@@ -88,4 +88,4 @@ Visit `http://localhost:3000`.
 3.  **Environment Variables:** Sensitive credentials are never hardcoded.
 
 ## 🎓 Acknowledgments
-Developed for [Ziaudding Univerisy/ Object Oriented Programming].
+Developed for [Ziauddin University/ Object Oriented Programming].
