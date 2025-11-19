@@ -101,9 +101,87 @@ Special thanks to my classmates who helped test it and gave feedback on the UI.
 ## 🧱 System Design Overview
 
 ### Class Diagram
-![Class Diagram](./docs/diagrams/class-diagram.png)
+```mermaid
+classDiagram
+    direction LR
 
-*Pulled straight from the actual code (Snippet, SnippetManager, Admin dashboard JS, SnippetStore, Auth helper, and the serverless API files).*
+    class Snippet {
+        +id
+        +title
+        +description
+        +code
+        +html
+        +getSrcDoc()
+        +renderCard(onPreview)
+        +_esc(text)
+    }
+
+    class SnippetManager {
+        -container
+        -modal
+        -modalContent
+        -modalBackdrop
+        -modalClose
+        -search
+        +init()
+        +fetchSnippets()
+        +renderSnippets()
+        +openModal(snippet)
+        +closeModal()
+        +_wireEvents()
+    }
+
+    class SnippetStore {
+        -filePath
+        -githubToken
+        -githubRepo
+        -branch
+        +constructor(rootDir)
+        +read()
+        +write(data)
+        +add(snippetPayload)
+        +update(id, payload)
+        +delete(id)
+        +_save(data, message)
+        +_commitToGitHub(data, message)
+        +static cleanHtml(html)
+    }
+
+    class AuthHelper {
+        +verify(req,res) bool
+    }
+
+    class AddSnippetAPI {
+        +handler(req,res)
+    }
+
+    class UpdateSnippetAPI {
+        +handler(req,res)
+    }
+
+    class DeleteSnippetAPI {
+        +handler(req,res)
+    }
+
+    class AdminDashboard {
+        -tokenKey
+        +checkAuth()
+        +fetchSnippets()
+        +renderList()
+        +loadSnippet(snippet)
+        +resetForm()
+        +setMsg(text,type)
+    }
+
+    SnippetManager "1" --> "*" Snippet : renders
+    AdminDashboard --> SnippetStore : via API
+    AddSnippetAPI --> SnippetStore : uses
+    UpdateSnippetAPI --> SnippetStore : uses
+    DeleteSnippetAPI --> SnippetStore : uses
+    AddSnippetAPI --> AuthHelper : verifies
+    UpdateSnippetAPI --> AuthHelper
+    DeleteSnippetAPI --> AuthHelper
+```
 
 ### CRUD Sequence (End-to-End)
 ![CRUD Sequence](./docs/diagrams/crud-sequence.png)
