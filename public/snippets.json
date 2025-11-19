@@ -26,5 +26,12 @@
     "description": "color ",
     "code": "body {\n    font-family: Arial, sans-serif;\n    text-align: center;\n    margin-top: 80px;\n    background-color: #f2f2f2;\n}\n\nh1 {\n    color: #333;\n}\n\nbutton {\n    padding: 10px 20px;\n    font-size: 16px;\n    background: #007bff;\n    color: white;\n    border: none;\n    border-radius: 6px;\n    cursor: pointer;\n}\n\nbutton:hover {\n    background: #0056b3;\n}\n",
     "html": "<h1>Welcome to My Simple Page</h1>\n    <p>Ye aik bohat simple HTML aur CSS ka demo hai.</p>\n\n    <button>Click Me</button>"
+  },
+  {
+    "id": "1763558522047",
+    "title": "animaton",
+    "description": "animation",
+    "code": ".box {\n  width: 100px;\n  height: 100px;\n  background: red;\n  position: relative;\n  animation: move 2s infinite alternate;\n}\n\n@keyframes move {\n  from {\n    left: 0;\n  }\n  to {\n    left: 200px;\n  }\n}",
+    "html": "<div class=\"box\"></div>"
   }
 ]
