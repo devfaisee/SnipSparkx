@@ -89,3 +89,102 @@ Visit `http://localhost:3000`.
 
 ## 🎓 Acknowledgments
 Developed for [Ziauddin University/ Object Oriented Programming].
+
+## 🧱 System Design Overview
+
+### Class Diagram
+```mermaid
+classDiagram
+    direction LR
+
+    class Snippet {
+        +id
+        +title
+        +description
+        +code
+        +html
+        +getSrcDoc()
+        +renderCard(onPreview)
+        +_esc(text)
+    }
+
+    class SnippetManager {
+        -container
+        -modal
+        -modalContent
+        -modalBackdrop
+        -modalClose
+        -search
+        +init()
+        +fetchSnippets()
+        +renderSnippets()
+        +openModal(snippet)
+        +closeModal()
+        +_wireEvents()
+    }
+
+    class SnippetStore {
+        -filePath
+        -githubToken
+        -githubRepo
+        -branch
+        +constructor(rootDir)
+        +read()
+        +write(data)
+        +add(snippetPayload)
+        +update(id, payload)
+        +delete(id)
+        +_save(data, message)
+        +_commitToGitHub(data, message)
+        +static cleanHtml(html)
+    }
+
+    class AuthHelper {
+        +verify(req,res) bool
+    }
+
+    class AddSnippetAPI {
+        +handler(req,res)
+    }
+
+    class UpdateSnippetAPI {
+        +handler(req,res)
+    }
+
+    class DeleteSnippetAPI {
+        +handler(req,res)
+    }
+
+    class AdminDashboard {
+        -tokenKey
+        +checkAuth()
+        +fetchSnippets()
+        +renderList()
+        +loadSnippet(snippet)
+        +resetForm()
+        +setMsg(text,type)
+    }
+
+    SnippetManager "1" --> "*" Snippet : renders
+    AdminDashboard --> SnippetStore : via API
+    AddSnippetAPI --> SnippetStore : uses
+    UpdateSnippetAPI --> SnippetStore : uses
+    DeleteSnippetAPI --> SnippetStore : uses
+    AddSnippetAPI --> AuthHelper : verifies
+    UpdateSnippetAPI --> AuthHelper
+    DeleteSnippetAPI --> AuthHelper
+```
+
+### Labeled Workflow
+1. **Visitor Experience**
+   - `SnippetManager.init()` fetches `public/snippets.json`, instantiates `Snippet` objects, and renders responsive cards with live iframe previews.
+   - Clicking a card launches the modal split view showing the sandboxed preview alongside HTML/CSS tabs with copy buttons.
+2. **Admin Lifecycle**
+   - `admin.html` checks for a JWT in `localStorage` to toggle between login form and dashboard.
+   - Login calls `/api/admin/login` (bcrypt + JWT). Authenticated admins can create/update/delete snippets via the form, live-preview drafts, and filter existing entries.
+3. **Serverless Backend**
+   - CRUD handlers (`/api/addSnippet`, `/api/updateSnippet`, `/api/deleteSnippet`) call the shared `SnippetStore` after verifying the token through `auth.js`.
+   - `SnippetStore` sanitizes HTML, writes changes to `public/snippets.json`, and optionally syncs to GitHub using the configured PAT/branch.
+4. **Data Propagation**
+   - Updated `snippets.json` is immediately consumed by both the public UI (on next fetch) and the admin list refresh, keeping the experience consistent without manual rebuilds.
+
