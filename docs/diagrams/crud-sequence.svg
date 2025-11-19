@@ -1,73 +1,160 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1300" height="760" font-family="'Segoe UI', Arial, sans-serif">
-  <style>
-    .title { font-size: 24px; font-weight: 600; }
-    .subtitle { font-size: 14px; fill: #475569; }
-    .lane { fill: #f8fafc; stroke: #94a3b8; stroke-width: 2; }
-    .lane-label { font-size: 14px; font-weight: 600; fill: #0f172a; }
-    .step { font-size: 13px; fill: #0f172a; }
-    .arrow { stroke: #0f172a; stroke-width: 2; marker-end: url(#arrowhead); }
-    .note { fill: #e0f2fe; stroke: #0ea5e9; stroke-width: 1.5; rx: 8; }
-  </style>
-
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="900" font-family="'Segoe UI', Tahoma, sans-serif">
   <defs>
-    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#0f172a" />
+    <style>
+      .title { font-size: 26px; font-weight: 700; fill: #1e293b; }
+      .subtitle { font-size: 14px; fill: #64748b; }
+      .lane { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; }
+      .lane-label { font-size: 15px; font-weight: 600; fill: #1e293b; }
+      .lifeline { stroke: #cbd5e1; stroke-width: 2; stroke-dasharray: 8,4; }
+      .activation { fill: #dbeafe; stroke: #3b82f6; stroke-width: 2; }
+      .message { stroke: #3b82f6; stroke-width: 2.5; fill: none; marker-end: url(#arrow-blue); }
+      .return-message { stroke: #10b981; stroke-width: 2; fill: none; marker-end: url(#arrow-green); stroke-dasharray: 6,3; }
+      .message-label { font-size: 13px; fill: #0f172a; font-weight: 500; }
+      .step-number { font-size: 12px; fill: #ffffff; font-weight: 700; }
+      .step-circle { fill: #3b82f6; }
+      .note-box { fill: #fef3c7; stroke: #f59e0b; stroke-width: 1.5; rx: 8; }
+      .note-text { font-size: 12px; fill: #78350f; }
+    </style>
+    <marker id="arrow-blue" markerWidth="12" markerHeight="12" refX="11" refY="6" orient="auto">
+      <path d="M 0 0 L 12 6 L 0 12 L 3 6 Z" fill="#3b82f6" />
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 L 2 5 Z" fill="#10b981" />
     </marker>
   </defs>
 
-  <text x="650" y="48" text-anchor="middle" class="title">SnipSparkx – CRUD Flow (End to End)</text>
-  <text x="650" y="72" text-anchor="middle" class="subtitle">Matches admin.html client logic, serverless APIs, SnippetStore persistence</text>
+  <!-- Title -->
+  <text x="750" y="50" text-anchor="middle" class="title">SnipSparkx CRUD Flow</text>
+  <text x="750" y="75" text-anchor="middle" class="subtitle">End-to-end sequence showing how snippet creation, updates, and deletion work</text>
 
   <!-- Swimlanes -->
-  <g transform="translate(60,110)">
-    <rect class="lane" width="220" height="520" rx="16" />
-    <text x="110" y="-12" text-anchor="middle" class="lane-label">Admin User</text>
+  <g id="lanes">
+    <g transform="translate(50, 120)">
+      <rect class="lane" width="220" height="700" rx="12"/>
+      <text x="110" y="30" text-anchor="middle" class="lane-label">Admin User</text>
+      <line x1="110" y1="50" x2="110" y2="700" class="lifeline"/>
+    </g>
+    
+    <g transform="translate(300, 120)">
+      <rect class="lane" width="240" height="700" rx="12"/>
+      <text x="120" y="30" text-anchor="middle" class="lane-label">Browser / UI</text>
+      <line x1="120" y1="50" x2="120" y2="700" class="lifeline"/>
+    </g>
+    
+    <g transform="translate(570, 120)">
+      <rect class="lane" width="260" height="700" rx="12"/>
+      <text x="130" y="30" text-anchor="middle" class="lane-label">API Endpoint</text>
+      <line x1="130" y1="50" x2="130" y2="700" class="lifeline"/>
+    </g>
+    
+    <g transform="translate(860, 120)">
+      <rect class="lane" width="240" height="700" rx="12"/>
+      <text x="120" y="30" text-anchor="middle" class="lane-label">AuthHelper</text>
+      <line x1="120" y1="50" x2="120" y2="700" class="lifeline"/>
+    </g>
+    
+    <g transform="translate(1130, 120)">
+      <rect class="lane" width="300" height="700" rx="12"/>
+      <text x="150" y="30" text-anchor="middle" class="lane-label">SnippetStore</text>
+      <line x1="150" y1="50" x2="150" y2="700" class="lifeline"/>
+    </g>
   </g>
-  <g transform="translate(300,110)">
-    <rect class="lane" width="220" height="520" rx="16" />
-    <text x="110" y="-12" text-anchor="middle" class="lane-label">Browser / UI</text>
-  </g>
-  <g transform="translate(540,110)">
-    <rect class="lane" width="240" height="520" rx="16" />
-    <text x="120" y="-12" text-anchor="middle" class="lane-label">Serverless API</text>
-  </g>
-  <g transform="translate(820,110)">
-    <rect class="lane" width="200" height="520" rx="16" />
-    <text x="100" y="-12" text-anchor="middle" class="lane-label">Auth Helper</text>
-  </g>
-  <g transform="translate(1040,110)">
-    <rect class="lane" width="200" height="520" rx="16" />
-    <text x="100" y="-12" text-anchor="middle" class="lane-label">SnippetStore</text>
+
+  <!-- Step 1: Form Submission -->
+  <g id="step1">
+    <circle class="step-circle" cx="90" cy="220" r="14"/>
+    <text x="90" y="225" text-anchor="middle" class="step-number">1</text>
+    <line class="message" x1="160" y1="220" x2="300" y2="220"/>
+    <text x="180" y="210" class="message-label">Fills form &amp; clicks Save</text>
   </g>
 
-  <!-- Steps -->
-  <text x="90" y="180" class="step">1. Admin fills form + clicks Save</text>
-  <line class="arrow" x1="180" y1="190" x2="300" y2="190" />
+  <!-- Step 2: Browser packs data -->
+  <g id="step2">
+    <rect class="activation" x="410" y="240" width="40" height="60" rx="4"/>
+    <circle class="step-circle" cx="340" cy="260" r="14"/>
+    <text x="340" y="265" text-anchor="middle" class="step-number">2</text>
+    <line class="message" x1="420" y1="260" x2="570" y2="260"/>
+    <text x="440" y="250" class="message-label">POST with payload + JWT</text>
+  </g>
 
-  <text x="320" y="230" class="step">2. Browser packs title, description, HTML, CSS + JWT token</text>
-  <line class="arrow" x1="410" y1="250" x2="540" y2="250" />
+  <!-- Step 3: API receives request -->
+  <g id="step3">
+    <rect class="activation" x="690" y="280" width="40" height="100" rx="4"/>
+    <circle class="step-circle" cx="630" cy="300" r="14"/>
+    <text x="630" y="305" text-anchor="middle" class="step-number">3</text>
+    <text x="640" y="320" class="message-label">Receives request</text>
+  </g>
 
-  <text x="560" y="300" class="step">3. API endpoint (add/update/delete) receives fetch() payload</text>
-  <line class="arrow" x1="660" y1="320" x2="820" y2="320" />
+  <!-- Step 4: Auth verification -->
+  <g id="step4">
+    <rect class="activation" x="970" y="340" width="40" height="60" rx="4"/>
+    <circle class="step-circle" cx="900" cy="350" r="14"/>
+    <text x="900" y="355" text-anchor="middle" class="step-number">4</text>
+    <line class="message" x1="730" y1="350" x2="860" y2="350"/>
+    <text x="750" y="340" class="message-label">verify(JWT token)</text>
+    <line class="return-message" x1="970" y1="370" x2="730" y2="370"/>
+    <text x="800" y="388" class="message-label">✓ valid</text>
+  </g>
 
-  <text x="840" y="360" class="step">4. Auth helper validates Authorization: Bearer &lt;token&gt;</text>
-  <line class="arrow" x1="920" y1="380" x2="660" y2="380" />
+  <!-- Step 5: Sanitize and prepare -->
+  <g id="step5">
+    <circle class="step-circle" cx="630" cy="410" r="14"/>
+    <text x="630" y="415" text-anchor="middle" class="step-number">5</text>
+    <text x="640" y="430" class="message-label">Sanitize HTML input</text>
+  </g>
 
-  <text x="560" y="420" class="step">5. API sanitizes input + calls SnippetStore add/update/delete</text>
-  <line class="arrow" x1="660" y1="440" x2="1040" y2="440" />
+  <!-- Step 6: Call SnippetStore -->
+  <g id="step6">
+    <rect class="activation" x="1270" y="450" width="40" height="120" rx="4"/>
+    <circle class="step-circle" cx="1100" cy="470" r="14"/>
+    <text x="1100" y="475" text-anchor="middle" class="step-number">6</text>
+    <line class="message" x1="730" y1="470" x2="1130" y2="470"/>
+    <text x="850" y="460" class="message-label">add/update/delete(snippet)</text>
+  </g>
 
-  <text x="1060" y="480" class="step">6. SnippetStore writes public/snippets.json (+ optional GitHub commit)</text>
-  <line class="arrow" x1="1040" y1="500" x2="660" y2="500" />
+  <!-- Step 7: Persist data -->
+  <g id="step7">
+    <circle class="step-circle" cx="1220" cy="510" r="14"/>
+    <text x="1220" y="515" text-anchor="middle" class="step-number">7</text>
+    <text x="1230" y="530" class="message-label">Write to snippets.json</text>
+    <text x="1230" y="548" class="note-text">(+ optional GitHub commit)</text>
+  </g>
 
-  <text x="560" y="540" class="step">7. API returns JSON (success/error + snippet data)</text>
-  <line class="arrow" x1="660" y1="560" x2="300" y2="560" />
+  <!-- Step 8: Return result -->
+  <g id="step8">
+    <circle class="step-circle" cx="1100" cy="590" r="14"/>
+    <text x="1100" y="595" text-anchor="middle" class="step-number">8</text>
+    <line class="return-message" x1="1270" y1="590" x2="730" y2="590"/>
+    <text x="950" y="580" class="message-label">Return snippet data</text>
+  </g>
 
-  <text x="320" y="600" class="step">8. UI shows toast, refreshes list, updates preview iframe</text>
-  <line class="arrow" x1="410" y1="620" x2="180" y2="620" />
+  <!-- Step 9: API responds -->
+  <g id="step9">
+    <circle class="step-circle" cx="630" cy="630" r="14"/>
+    <text x="630" y="635" text-anchor="middle" class="step-number">9</text>
+    <line class="return-message" x1="690" y1="630" x2="420" y2="630"/>
+    <text x="500" y="620" class="message-label">JSON response (200 OK)</text>
+  </g>
 
-  <!-- Note -->
-  <g transform="translate(160,660)">
-    <rect class="note" width="980" height="50" />
-    <text x="490" y="690" text-anchor="middle" class="step">References: admin.html (dashboard JS), api/addSnippet.js, api/updateSnippet.js, api/deleteSnippet.js, api/_lib/auth.js, api/_lib/store.js</text>
+  <!-- Step 10: UI updates -->
+  <g id="step10">
+    <circle class="step-circle" cx="340" cy="670" r="14"/>
+    <text x="340" y="675" text-anchor="middle" class="step-number">10</text>
+    <line class="return-message" x1="410" y1="670" x2="160" y2="670"/>
+    <text x="200" y="660" class="message-label">Show toast &amp; refresh</text>
+  </g>
+
+  <!-- Step 11: Display update -->
+  <g id="step11">
+    <circle class="step-circle" cx="90" cy="710" r="14"/>
+    <text x="90" y="715" text-anchor="middle" class="step-number">11</text>
+    <text x="100" y="730" class="message-label">See updated list</text>
+  </g>
+
+  <!-- Note Box -->
+  <g transform="translate(100, 840)">
+    <rect class="note-box" width="1300" height="50" />
+    <text x="650" y="25" text-anchor="middle" class="note-text">Backend logging: Each step logs to console with [ENDPOINT_NAME] prefix showing method, auth status, payload info, and responses</text>
+    <text x="650" y="42" text-anchor="middle" class="note-text">Files: api/addSnippet.js, api/updateSnippet.js, api/deleteSnippet.js, api/_lib/auth.js, api/_lib/store.js</text>
   </g>
 </svg>
