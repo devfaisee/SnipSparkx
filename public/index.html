@@ -6,8 +6,8 @@
   <title>SnipSparkx — CSS Snippets</title>
   <link rel="stylesheet" href="/style.css" />
   <!-- Highlight.js for code styling -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/atom-one-dark.min.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+  <link rel="stylesheet" href="/vendor/atom-one-dark.min.css">
+  <script src="/vendor/highlight.min.js"></script>
 </head>
 <body>
   <header class="bg-gradient-to-b from-slate-900 to-slate-800 text-slate-100">
@@ -59,7 +59,7 @@
           <div id="modalTitle" class="text-slate-100 font-medium">Preview</div>
           <button id="modalClose" class="px-3 py-1 text-sm rounded bg-slate-800/60 text-slate-200">Close</button>
         </div>
-        <iframe id="modalIframe" class="w-full h-[70vh] bg-white" sandbox="allow-same-origin allow-scripts"></iframe>
+        <iframe id="modalIframe" class="w-full h-[70vh] bg-white" sandbox="allow-scripts"></iframe>
       </div>
     </div>
   </div>
@@ -132,7 +132,7 @@
 
       const iframe = document.createElement('iframe');
       iframe.className = 'w-full h-36 rounded-md mt-4 border border-slate-700 bg-white';
-      iframe.setAttribute('sandbox','allow-same-origin allow-scripts');
+      iframe.setAttribute('sandbox','allow-scripts');
       iframe.srcdoc = this.getSrcDoc();
       card.appendChild(iframe);
 

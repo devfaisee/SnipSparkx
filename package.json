@@ -3,7 +3,6 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "vercel dev",
     "start": "vercel dev",
     "build:css": "tailwindcss -i ./src/input.css -o ./public/style.css"
   },
@@ -12,6 +11,7 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
+    "dotenv": "^17.2.3",
     "jsonwebtoken": "^9.0.0"
   }
 }
